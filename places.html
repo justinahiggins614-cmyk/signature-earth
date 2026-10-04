@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Places A–Z — Signature Earth</title>
+<meta name="description" content="The full Signature Earth gazetteer: tens of thousands of real places, A to Z.">
+<style>
+:root{--gold:#d4a017}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#eef;background:radial-gradient(1200px 800px at 70% -10%,#16244d 0%,#0b1020 55%,#060a16 100%);min-height:100vh}
+.wrap{max-width:1060px;margin:0 auto;padding:18px 16px 60px}
+.kicker{letter-spacing:.25em;font-size:.72rem;color:var(--gold);margin:14px 0 4px}
+h1{font-size:1.8rem;margin:.1em 0}
+.tabs{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+.tabs a{flex:1 1 120px;text-align:center;text-decoration:none;color:#eef;background:#141d38;border:2px solid #2a3a66;border-radius:999px;padding:11px 8px;font-weight:700}
+.tabs a.active{background:var(--gold);color:#101010;border-color:var(--gold)}
+.card{background:#101a33;border:1px solid #2a3a66;border-radius:14px;padding:18px;margin:14px 0}
+.status{color:#9fb3e8;font-size:.95rem}
+#potd{display:none;border:1px solid var(--gold)}
+#potd h3{color:var(--gold);margin:.2em 0}
+.potd-name{font-size:1.3rem;margin:.3em 0}
+.potd-name a{color:#fff;text-decoration:none}
+.potd-name a:hover{text-decoration:underline}
+.meta{color:#9fb3e8;line-height:1.6}
+.acts{margin-top:10px;display:flex;flex-wrap:wrap;gap:8px}
+.abtn{background:#1a2547;color:#eef;border:2px solid #2a3a66;border-radius:999px;padding:9px 14px;font-weight:700;cursor:pointer;font-size:.9rem}
+.abtn:hover{border-color:var(--gold)}
+.tbtn{background:#141d38;color:#eef;border:2px solid #2a3a66;border-radius:999px;padding:10px 16px;font-weight:700;cursor:pointer;font-size:.95rem;margin:8px 0}
+.tbtn:hover{border-color:var(--gold)}
+.searchwrap{position:relative;margin:10px 0}
+#pssearch,#psearch{width:100%;padding:12px 14px;border-radius:999px;border:2px solid #2a3a66;background:#0d1530;color:#eef;font-size:1rem}
+#psuggest{position:absolute;top:110%;left:0;right:0;background:#101a33;border:1px solid #2a3a66;border-radius:12px;max-height:260px;overflow:auto;z-index:30;display:none}
+#psuggest button{display:block;width:100%;text-align:left;background:none;border:0;color:#eef;padding:10px 12px;cursor:pointer;font-size:.95rem}
+#letters{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px;margin:12px 0}
+.lbtn{background:#141d38;border:2px solid #2a3a66;border-radius:12px;color:#eef;padding:10px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
+.lbtn b{font-size:1.2rem;color:var(--gold)}
+.lbtn span{font-size:.72rem;color:#9fb3e8}
+.lbtn:hover{border-color:var(--gold)}
+#listTitle{color:var(--gold);margin:14px 0 6px}
+.prow{display:flex;justify-content:space-between;gap:10px;align-items:baseline;background:#0d1530;border:1px solid #22305c;border-radius:10px;padding:10px 12px;margin:6px 0;color:#eef;text-decoration:none}
+.prow:hover{border-color:var(--gold)}
+.prow span{color:#9fb3e8;font-size:.85rem;text-align:right}
+.jahnet{margin:30px 0 10px;padding:14px;border:1px solid #2a3a66;border-radius:14px;background:#0d1530;font-size:.82rem;line-height:2.1}
+.jahnet-t{color:var(--gold);font-weight:800;letter-spacing:.2em;margin-right:10px}
+.jahnet a{color:#9fb3e8;text-decoration:none;margin:0 8px 0 0;white-space:nowrap}
+.jahnet .here{display:inline-block;background:#3a1414;color:#ffb3b3;border:1px solid #a33;border-radius:999px;padding:2px 12px;font-weight:800;margin:4px 0}
+footer{color:#7286b8;font-size:.78rem;text-align:center;margin:20px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="kicker">SITE 28 OF 30 · THE JAH NETWORK</p>
+  <h1>🗂 Places A–Z</h1>
+  <nav class="tabs" aria-label="Site sections">
+    <a href="index.html">🏠 Main</a>
+    <a href="globe.html">🌍 Globe</a>
+    <a href="places.html" class="active">🗂 Places A–Z</a>
+  </nav>
+
+  <div class="card">
+    <p class="status">● <span id="statline">Loading place count…</span></p>
+    <div class="searchwrap">
+      <input id="psearch" type="search" placeholder="🔎 Search the gazetteer…" aria-label="Search places" autocomplete="off">
+      <div id="psuggest"></div>
+    </div>
+  </div>
+
+  <div class="card" id="potd"></div>
+
+  <div class="card">
+    <h2 style="color:var(--gold);margin:.2em 0">Browse by letter</h2>
+    <div id="letters"><p style="color:#9fb3e8">Loading letters…</p></div>
+  </div>
+
+  <h2 id="listTitle"></h2>
+  <div id="list"></div>
+
+  <div class="jahnet"><span class="jahnet-t">THE JAH NETWORK</span><a href="https://justinahiggins614-cmyk.github.io/signature-math/">1 Signature Math</a><a href="https://justinahiggins614-cmyk.github.io/jah-calculator/">2 Signature Universal Paradox Immune Calculator</a><a href="https://justinahiggins614-cmyk.github.io/jah-dictionary/">3 The Signature Dictionary</a><a href="https://justinahiggins614-cmyk.github.io/jah-wiki/">4 JAH Wiki</a><a href="https://justinahiggins614-cmyk.github.io/jah-n-wiki-leaks/">5 JAH-N Wiki</a><a href="https://justinahiggins614-cmyk.github.io/signature-llama/">6 Signature Llama: The Fully Cyber Utilizable AI</a><a href="https://justinahiggins614-cmyk.github.io/jah-ai-models/">7 The Signature AI Phone Book</a><a href="https://justinahiggins614-cmyk.github.io/cyber-patent-catalog/">8 Globally Rejustered Patent Catalog</a><a href="https://justinahiggins614-cmyk.github.io/signature-one-archive/specs.html">9 Signature Spec Catalog Pending Patents</a><a href="https://justinahiggins614-cmyk.github.io/signature-computer-systems/">10 The Signature PC System Depository</a><a href="https://justinahiggins614-cmyk.github.io/signature-books/">11 The Signature Book Depository</a><a href="https://justinahiggins614-cmyk.github.io/signature-comics/">12 The Signature Comic Store</a><a href="https://justinahiggins614-cmyk.github.io/signature-newspapers/">13 The Signature Global Newspaper Archive</a><a href="https://justinahiggins614-cmyk.github.io/signature-backend/">14 The Signature AI Mix and Match Generator</a><a href="https://justinahiggins614-cmyk.github.io/signature-boundless-generators/">15 The Signature Boundless Generator Archive</a><a href="https://justinahiggins614-cmyk.github.io/signature-ai-mixlab/">16 The Signature AI Mix Lab</a><a href="https://justinahiggins614-cmyk.github.io/signature-ai-olypics/">17 AI Olympics</a><a href="https://justinahiggins614-cmyk.github.io/signature-chip-maker/">18 The Signature Computer Chip Maker and Archive</a><a href="https://justinahiggins614-cmyk.github.io/signature-app-archive/">19 The Signature App Archive</a><a href="https://justinahiggins614-cmyk.github.io/signature-ai-robot-matcher/">20 The Signature AI Robot Matcher</a><a href="https://justinahiggins614-cmyk.github.io/signature-experiment-solver/">21 The Signature Experiment Solver</a><a href="https://justinahiggins614-cmyk.github.io/signature-ai-image-video-maker/">22 Signature AI Pixel</a><a href="https://justinahiggins614-cmyk.github.io/signature-ai-song-maker/">23 Signature Music Studio</a><a href="https://justinahiggins614-cmyk.github.io/signature-fixit/">24 The Signature Mr Fix-It</a><a href="https://justinahiggins614-cmyk.github.io/signature-university/">25 The Signature University</a><a href="https://justinahiggins614-cmyk.github.io/signature-cyber-mega-mall/">26 The Signature Cyber Mega-Mall</a><a href="https://justinahiggins614-cmyk.github.io/signature-3d-print/">27 The Signature 3D Print Mega Mall</a><a href="https://justinahiggins614-cmyk.github.io/signature-flight-school/">29 The Signature Flight School</a><a href="https://justinahiggins614-cmyk.github.io/signature-game-store/">30 The Signature Game Store</a><br><span class="here">28 Signature Earth — YOU ARE HERE</span></div>
+  <footer>Signature Earth · place data © GeoNames (CC-BY 4.0)</footer>
+</div>
+<script src="js/audio.js"></script>
+<script src="js/site.js"></script>
+<script src="js/places.js"></script>
+</body>
+</html>
