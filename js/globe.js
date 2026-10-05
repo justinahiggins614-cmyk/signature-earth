@@ -215,10 +215,16 @@ canvas.addEventListener('wheel', function (e) {
 
 function handleTap(e) {
   var n = ndc(e);
-  // marker tap?
+  // marker tap? (gazetteer pins + highlighted business/address pins)
   raycaster2.setFromCamera({ x: n.x, y: n.y }, camera);
-  var mh = raycaster2.intersectObjects(markers, false)[0];
-  if (mh && mh.object.userData.rec) { openCard(mh.object.userData.rec); return; }
+  var mh = raycaster2.intersectObjects(markers.concat(resultPins), false)[0];
+  if (mh && mh.object.userData.rec) {
+    var rec = mh.object.userData.rec;
+    if (rec.fromAddress) setGlobeMode('sat');
+    addMarker(rec);
+    flyTo(rec.la, rec.lo, function () { openCard(rec); });
+    return;
+  }
   var ll = pickLatLon(n.x, n.y);
   if (!ll) return;
   if (readout) readout.textContent = SE.fmtCoords(ll.la, ll.lo); // touch: tap updates readout
@@ -304,75 +310,147 @@ function findPlace(name, country) {
   return pool.length ? rowToRec(pool[0]) : null;
 }
 
-// ---------- search ----------
+// ---------- unified search: gazetteer places first, Nominatim businesses/addresses after ----------
+// Google-Earth-style: one big bar; typing "Walmart" finds nearby businesses via
+// Nominatim (OSM POIs), biased to the current view; results get highlighted pins.
 var searchInput = document.getElementById('search'), suggest = document.getElementById('suggest'), lastResults = [];
-searchInput.addEventListener('input', function () {
-  var q = searchInput.value.trim().toLowerCase();
-  if (q.length < 2) { suggest.style.display = 'none'; return; }
+var nomTimer = null, nomSeq = 0;
+function currentViewbox() {
+  // viewbox=<minlon>,<maxlat>,<maxlon>,<minlat> around the current view center
+  try {
+    var v = window.EarthControl.getView();
+    var span = Math.max(2, Math.min(40, (v.bbox[3] - v.bbox[1])));
+    return (v.lo - span / 2) + ',' + (v.la + span / 2) + ',' + (v.lo + span / 2) + ',' + (v.la - span / 2);
+  } catch (e) { return null; }
+}
+function nomKind(o) {
+  var cls = o.class || '';
+  if (/^(shop|amenity|office|tourism|leisure|craft|building)$/.test(cls)) return 'business';
+  return 'address';
+}
+function nomRec(o) {
+  var label = (o.display_name || '').split(',').slice(0, 3).join(',');
+  var kind = nomKind(o);
+  return {
+    id: 'addr:' + o.place_id, n: label, a: label,
+    la: +o.lat, lo: +o.lon,
+    c: (o.display_name || '').split(',').pop().trim(), r: '', p: 0, e: null, t: '',
+    kind: kind, fromAddress: true // business/address pick: fly + satellite + close-up
+  };
+}
+function renderUnified(placeRows, nomRows, q) {
+  lastResults = placeRows.map(function (r) {
+    return { row: r, kind: 'place', label: r[0],
+      sub: r[3] + (r[5] ? ' · ' + SE.fmtPop(r[5]) : '') };
+  }).concat(nomRows.map(function (o) {
+    return { rec: nomRec(o), kind: nomKind(o), label: (o.display_name || '').split(',').slice(0, 3).join(','),
+      sub: o.type ? o.type.replace(/_/g, ' ') : '' };
+  }));
+  suggest.innerHTML = '';
+  if (!lastResults.length) {
+    suggest.innerHTML = '<button disabled>No places, businesses, or addresses found — try another search.</button>';
+    return;
+  }
+  var lastKind = null;
+  lastResults.forEach(function (it) {
+    if (it.kind !== lastKind) {
+      lastKind = it.kind;
+      var hd = document.createElement('div');
+      hd.className = 'sug-hd';
+      hd.textContent = it.kind === 'place' ? '📍 PLACES' : (it.kind === 'business' ? '🏪 BUSINESSES' : '🏠 ADDRESSES');
+      suggest.appendChild(hd);
+    }
+    var b = document.createElement('button');
+    var icon = it.kind === 'place' ? '📍' : (it.kind === 'business' ? '🏪' : '🏠');
+    var tag = it.kind === 'place' ? '<span class="kindtag">place</span>'
+      : '<span class="kindtag ' + (it.kind === 'business' ? 'biz' : 'addr') + '">' + it.kind + '</span>';
+    b.innerHTML = icon + ' <b>' + SE.esc(it.label) + '</b>' + tag +
+      ' <span style="color:#9fb3e8">' + SE.esc(it.sub || '') + '</span>';
+    b.onclick = function () { pickUnified(it); };
+    suggest.appendChild(b);
+  });
+  // highlight the Nominatim hits on the globe (distinct pins)
+  var nomRecs = lastResults.filter(function (it) { return it.rec; }).map(function (it) { return it.rec; });
+  addResultPins(nomRecs);
+}
+function pickUnified(it) {
+  suggest.style.display = 'none';
+  searchInput.value = it.label;
+  if (it.row) selectPlace(rowToRec(it.row));
+  else selectPlace(it.rec);
+}
+function unifiedSearch(q) {
+  var seq = ++nomSeq;
   suggest.style.display = 'block';
-  suggest.innerHTML = '<button disabled>Loading places…</button>';
+  suggest.innerHTML = '<button disabled>Searching the Earth…</button>';
   ensureIndex().then(function (rows) {
-    var starts = [], contains = [];
+    if (seq !== nomSeq) return; // superseded
+    var ql = q.toLowerCase(), starts = [], contains = [];
     for (var i = 0; i < rows.length && (starts.length + contains.length) < 40; i++) {
       var nm = rows[i][0].toLowerCase();
-      if (nm.indexOf(q) === 0) starts.push(rows[i]);
-      else if (nm.indexOf(q) > 0) contains.push(rows[i]);
+      if (nm.indexOf(ql) === 0) starts.push(rows[i]);
+      else if (nm.indexOf(ql) > 0) contains.push(rows[i]);
     }
-    lastResults = starts.concat(contains).slice(0, 8);
-    if (!lastResults.length) {
-      suggest.innerHTML = '<button id="addrBtn">🌐 No named place — search street addresses…</button>';
-      document.getElementById('addrBtn').onclick = function () { nominatimSearch(searchInput.value.trim()); };
-      return;
-    }
-    suggest.innerHTML = '';
-    lastResults.forEach(function (r, i) {
-      var b = document.createElement('button');
-      b.innerHTML = '<b>' + SE.esc(r[0]) + '</b> <span style="color:#9fb3e8">' + SE.esc(r[3]) + (r[5] ? ' · ' + SE.fmtPop(r[5]) : '') + '</span>';
-      b.onclick = function () { suggest.style.display = 'none'; searchInput.value = r[0]; selectPlace(rowToRec(r)); };
-      suggest.appendChild(b);
+    var placeRows = starts.concat(contains).slice(0, 6);
+    renderUnified(placeRows, [], q); // local first, instant
+    if (q.length < 3) return; // Nominatim only for 3+ chars (usage policy: no keystroke spam)
+    var vb = currentViewbox();
+    var url = 'https://nominatim.openstreetmap.org/search?format=json&limit=8&addressdetails=1&q=' + encodeURIComponent(q) +
+      (vb ? '&viewbox=' + vb + '&bounded=0' : '');
+    fetch(url, { headers: { 'Accept': 'application/json' } }).then(function (r) { return r.json(); }).then(function (js) {
+      if (seq !== nomSeq) return;
+      renderUnified(placeRows, js || [], q);
+    }).catch(function () {
+      if (seq !== nomSeq) return;
+      renderUnified(placeRows, [], q); // local results stand even if Nominatim is down
     });
   }).catch(function () {});
+}
+searchInput.addEventListener('input', function () {
+  var q = searchInput.value.trim();
+  if (q.length < 2) { suggest.style.display = 'none'; nomSeq++; clearResultPins(); return; }
+  if (nomTimer) clearTimeout(nomTimer);
+  nomTimer = setTimeout(function () { unifiedSearch(q); }, q.length < 3 ? 150 : 500); // debounce Nominatim
 });
 searchInput.addEventListener('keydown', function (e) {
-  if (e.key === 'Enter' && lastResults.length) {
-    suggest.style.display = 'none'; searchInput.value = lastResults[0][0];
-    selectPlace(rowToRec(lastResults[0]));
-  }
+  if (e.key === 'Enter' && lastResults.length) pickUnified(lastResults[0]);
 });
 document.addEventListener('click', function (e) {
-  if (!e.target.closest('.searchwrap')) suggest.style.display = 'none';
+  if (!e.target.closest('.searchwrap')) { suggest.style.display = 'none'; }
 });
-// street-address search via Nominatim (free, OSM contributors, attributed in footer)
-function nominatimSearch(q) {
-  suggest.style.display = 'block';
-  suggest.innerHTML = '<button disabled>🌐 Searching addresses…</button>';
-  fetch('https://nominatim.openstreetmap.org/search?format=json&limit=6&q=' + encodeURIComponent(q), {
-    headers: { 'Accept': 'application/json' }
-  }).then(function (r) { return r.json(); }).then(function (js) {
-    if (!js || !js.length) { suggest.innerHTML = '<button disabled>No address found — try a town or landmark.</button>'; return; }
-    suggest.innerHTML = '';
-    js.forEach(function (o) {
-      var label = (o.display_name || '').split(',').slice(0, 3).join(',');
-      var b = document.createElement('button');
-      b.innerHTML = '🏠 <b>' + SE.esc(label) + '</b>';
-      b.onclick = function () {
-        suggest.style.display = 'none'; searchInput.value = label;
-        selectPlace({
-          id: 'addr:' + o.place_id, n: label, a: label,
-          la: +o.lat, lo: +o.lon,
-          c: (o.display_name || '').split(',').pop().trim(), r: '', p: 0, e: null, t: '',
-          fromAddress: true // street-address pick: fly + satellite + close-up
-        });
-      };
-      suggest.appendChild(b);
-    });
-  }).catch(function () {
-    suggest.innerHTML = '<button disabled>Address search is unreachable right now.</button>';
+// street-address/business search via Nominatim (free, OSM contributors, attributed in footer)
+// — superseded by unifiedSearch above; kept as a named entry point for the AI pal.
+function nominatimSearch(q) { unifiedSearch(q); }
+
+// ---------- highlighted result pins (businesses/addresses — distinct from gazetteer pins) ----------
+var pinTexBiz = (function () {
+  var c = document.createElement('canvas'); c.width = c.height = 64;
+  var g = c.getContext('2d');
+  g.fillStyle = '#37d5e8';
+  g.beginPath(); g.arc(32, 24, 16, 0, Math.PI * 2); g.fill();
+  g.beginPath(); g.moveTo(18, 34); g.lineTo(32, 60); g.lineTo(46, 34); g.closePath(); g.fill();
+  g.fillStyle = '#0b2530'; g.beginPath(); g.arc(32, 24, 7, 0, Math.PI * 2); g.fill();
+  var t = new THREE.CanvasTexture(c); return t;
+})();
+var resultPins = [];
+function clearResultPins() {
+  resultPins.forEach(function (m) { globeGroup.remove(m); m.material.dispose(); });
+  resultPins = [];
+}
+function addResultPins(recs) {
+  clearResultPins();
+  recs.slice(0, 8).forEach(function (rec) {
+    var s = new THREE.Sprite(new THREE.SpriteMaterial({ map: pinTexBiz, depthTest: false, transparent: true }));
+    s.position.copy(latLonToVec3(rec.la, rec.lo).multiplyScalar(1.035));
+    s.scale.set(0.085, 0.085, 1);
+    s.userData.rec = rec;
+    globeGroup.add(s); resultPins.push(s);
   });
 }
 
 function selectPlace(rec) {
   stopTour();
+  clearResultPins();
   addMarker(rec);
   if (rec.fromAddress) setGlobeMode('sat'); // address pick: satellite view, like the image
   flyTo(rec.la, rec.lo, function () { openCard(rec); });
@@ -720,7 +798,7 @@ if (bms) bms.onclick = function () { setGlobeMode('sig'); };
 if (bmt) bmt.onclick = function () { setGlobeMode('sat'); JAHaudio.speak('Satellite view. Natural-color imagery, same planet.'); };
 document.getElementById('btnZoomOut').onclick = function () { targetDist = Math.min(6, targetDist * 1.22); idleT = 0; };
 document.getElementById('btnReset').onclick = function () {
-  stopTour(); clearMeasure(); clearMarkers(); card.classList.remove('open'); JAHaudio.stop();
+  stopTour(); clearMeasure(); clearMarkers(); clearResultPins(); card.classList.remove('open'); JAHaudio.stop();
   targetRX = 0.42; targetRY = -1.1; targetDist = DEF_DIST; idleT = 0;
 };
 

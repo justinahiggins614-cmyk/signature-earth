@@ -21,6 +21,17 @@ h1{font-size:1.6rem;margin:.1em 0}
 #suggest{position:absolute;top:110%;left:0;right:0;background:#101a33;border:1px solid #2a3a66;border-radius:12px;max-height:260px;overflow:auto;z-index:30;display:none}
 #suggest button{display:block;width:100%;text-align:left;background:none;border:0;color:#eef;padding:10px 12px;cursor:pointer;font-size:.95rem}
 #suggest button:hover,#suggest button:focus{background:#1c2a55}
+.geosearch{margin:12px 0 4px}
+.geosearch .searchwrap{position:relative;max-width:680px;margin:0 auto}
+.geosearch #search{width:100%;padding:16px 22px;border-radius:999px;border:2px solid var(--gold);background:#0d1530;color:#eef;font-size:1.12rem;box-shadow:0 4px 18px rgba(0,0,0,.45)}
+.geosearch #search:focus{outline:none;border-color:#ffe9a8}
+.geosearch #suggest{position:absolute;top:112%;left:0;right:0;background:#101a33;border:1px solid #2a3a66;border-radius:14px;max-height:320px;overflow:auto;z-index:30;display:none;box-shadow:0 8px 28px rgba(0,0,0,.55)}
+.geosearch #suggest button{display:block;width:100%;text-align:left;background:none;border:0;color:#eef;padding:11px 14px;cursor:pointer;font-size:.95rem}
+.geosearch #suggest button:hover,.geosearch #suggest button:focus{background:#1c2a55}
+.sug-hd{padding:10px 14px 4px;color:var(--gold);font-size:.78rem;font-weight:800;letter-spacing:.12em}
+.kindtag{display:inline-block;font-size:.7rem;font-weight:800;border:1px solid #2a3a66;border-radius:999px;padding:1px 8px;margin-left:8px;color:#9fb3e8}
+.kindtag.biz{color:#7ef0ff;border-color:#2a7a8a}
+.kindtag.addr{color:#ffd98a;border-color:#8a6a2a}
 .tbtn{background:#141d38;color:#eef;border:2px solid #2a3a66;border-radius:999px;padding:10px 14px;font-weight:700;cursor:pointer;font-size:.95rem}
 .tbtn.on{background:var(--gold);color:#101010;border-color:var(--gold)}
 .tbtn:hover{border-color:var(--gold)}
@@ -69,11 +80,14 @@ footer{color:#7286b8;font-size:.78rem;text-align:center;margin:20px 0}
     <a href="addresses.html">📬 Addresses</a>
   </nav>
 
-  <div class="toolbar">
+  <div class="geosearch">
     <div class="searchwrap">
-      <input id="search" type="search" placeholder="🔎 Search places or street addresses…" aria-label="Search places or addresses" autocomplete="off">
+      <input id="search" type="search" placeholder="🔎 Search the Earth — places, businesses, addresses…" aria-label="Search places, businesses or addresses" autocomplete="off">
       <div id="suggest" role="listbox"></div>
     </div>
+  </div>
+
+  <div class="toolbar">
     <button class="tbtn" id="btnMeasure" aria-pressed="false">📏 Measure</button>
     <button class="tbtn" id="btnLayers" aria-pressed="false">🗺 Layers</button>
     <button class="tbtn" id="btnTours">🧭 Tours</button>
