@@ -199,5 +199,15 @@ if(!ls(FLAG)&&__qs.indexOf("find=")<0&&__hash.indexOf("ll=")<0){setTimeout(openW
   if (window.JAHProfile && JAHProfile.ui) JAHProfile.ui.renderButton(mount);
 })();
 </script>
+<script>
+(function () {
+  /* JAHProfile "Make it mine" page greeting (Step 6a) — renders ONLY when personalization
+     is live (signed in + opted in + My view); public and Signature view stay exactly as today. */
+  if (window.JAHProfile && JAHProfile.ui) {
+    var mount = document.querySelector('header') || document.body;
+    JAHProfile.ui.renderGreeting(mount);
+  }
+})();
+</script>
 </body>
 </html>
