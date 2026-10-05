@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Globe — Signature Earth</title>
-<meta name="description" content="The interactive Signature Earth globe: spin, zoom, search 69,763 real places, measure distances, take tours.">
+<meta name="description" content="The interactive Signature Earth globe: spin, zoom, tilt, search 69,763 real places + street addresses, measure distance and area, layers, 3D terrain, tours.">
 <style>
 :root{--gold:#d4a017}
 *{box-sizing:border-box}
@@ -55,26 +55,39 @@ footer{color:#7286b8;font-size:.78rem;text-align:center;margin:20px 0}
 </head>
 <body>
 <div class="wrap">
-  <p class="kicker">SITE 28 OF 30 · THE JAH NETWORK</p>
+  <p class="kicker">SITE 28 OF 31 · THE JAH NETWORK</p>
   <h1>🌍 The Globe</h1>
   <nav class="tabs" aria-label="Site sections">
     <a href="index.html">🏠 Main</a>
     <a href="globe.html" class="active">🌍 Globe</a>
+    <a href="map.html">🗺 Map</a>
     <a href="places.html">🗂 Places A–Z</a>
+    <a href="finds.html">💎 Finds</a>
   </nav>
 
   <div class="toolbar">
     <div class="searchwrap">
-      <input id="search" type="search" placeholder="🔎 Search any place… (e.g. Tokyo)" aria-label="Search places" autocomplete="off">
+      <input id="search" type="search" placeholder="🔎 Search places or street addresses…" aria-label="Search places or addresses" autocomplete="off">
       <div id="suggest" role="listbox"></div>
     </div>
     <button class="tbtn" id="btnMeasure" aria-pressed="false">📏 Measure</button>
+    <button class="tbtn" id="btnLayers" aria-pressed="false">🗺 Layers</button>
     <button class="tbtn" id="btnTours">🧭 Tours</button>
     <button class="tbtn" id="btnSaved">⭐ Saved</button>
+    <button class="tbtn" id="btnTiltUp" aria-label="Tilt up">⤢ Tilt</button>
+    <button class="tbtn" id="btnTiltDn" aria-label="Tilt down">⤡ Flat</button>
     <button class="tbtn" id="btnZoomIn" aria-label="Zoom in">＋</button>
     <button class="tbtn" id="btnZoomOut" aria-label="Zoom out">－</button>
     <button class="tbtn" id="btnReset">⟳ Reset view</button>
   </div>
+
+  <div id="layersPanel" aria-label="Globe layers" style="display:none;background:#101a33;border:1px solid #2a3a66;border-radius:14px;padding:12px 16px;margin:10px 0">
+    <h3 style="margin:.2em 0 .4em;color:var(--gold);font-size:1rem">🗺 Layers</h3>
+    <label style="display:block;color:#eef;padding:7px 0;cursor:pointer"><input type="checkbox" id="lyBorders" style="margin-right:9px;transform:scale(1.25)"> Country borders <span style="color:#8fa0c8">(Natural Earth, public domain)</span></label>
+    <label style="display:block;color:#eef;padding:7px 0;cursor:pointer"><input type="checkbox" id="lyLabels" style="margin-right:9px;transform:scale(1.25)"> Country labels</label>
+    <label style="display:block;color:#eef;padding:7px 0;cursor:pointer"><input type="checkbox" id="lyTerrain" checked style="margin-right:9px;transform:scale(1.25)"> 3D terrain <span style="color:#8fa0c8">(exaggerated, public elevation data)</span></label>
+  </div>
+  <style>#layersPanel.open{display:block!important}</style>
 
   <div id="stage">
     <canvas id="globe"></canvas>
@@ -82,7 +95,7 @@ footer{color:#7286b8;font-size:.78rem;text-align:center;margin:20px 0}
     <div id="readout">—</div>
     <div id="compass" title="North"><span id="needle">🧭</span></div>
   </div>
-  <p class="hint">Drag to spin · scroll or pinch to zoom · tap a place pin or search to fly there. In 📏 Measure mode, tap two points on the globe.</p>
+  <p class="hint">Drag to spin · scroll or pinch to zoom · tap the 🧭 compass to reset north · ⤢/⤡ tilt the view · tap a place pin or search to fly there. In 📏 Measure mode, tap points — two for distance, three or more then ✓ Done for area.</p>
 
   <div id="measlabel"></div>
 
@@ -113,11 +126,30 @@ footer{color:#7286b8;font-size:.78rem;text-align:center;margin:20px 0}
   </div>
 
   <div class="jahnet"><span class="jahnet-t">THE JAH NETWORK</span><a href="https://justinahiggins614-cmyk.github.io/signature-math/">1 Signature Math</a><a href="https://justinahiggins614-cmyk.github.io/jah-calculator/">2 Signature Universal Paradox Immune Calculator</a><a href="https://justinahiggins614-cmyk.github.io/jah-dictionary/">3 The Signature Dictionary</a><a href="https://justinahiggins614-cmyk.github.io/jah-wiki/">4 JAH Wiki</a><a href="https://justinahiggins614-cmyk.github.io/jah-n-wiki-leaks/">5 JAH-N Wiki Leaks</a><a href="https://justinahiggins614-cmyk.github.io/signature-llama/">6 Signature Llama: The Fully Cyber Utilizable AI</a><a href="https://justinahiggins614-cmyk.github.io/jah-ai-models/">7 The Signature AI Phone Book</a><a href="https://justinahiggins614-cmyk.github.io/cyber-patent-catalog/">8 Globally Rejustered Patent Catalog</a><a href="https://justinahiggins614-cmyk.github.io/signature-one-archive/specs.html">9 Signature Spec Catalog Pending Patents</a><a href="https://justinahiggins614-cmyk.github.io/jah-computer-systems/">10 The Signature PC System Depository</a><a href="https://justinahiggins614-cmyk.github.io/signature-books/">11 The Signature Book Depository</a><a href="https://justinahiggins614-cmyk.github.io/signature-comics/">12 The Signature Comic Store</a><a href="https://justinahiggins614-cmyk.github.io/signature-newspapers/">13 The Signature Global Newspaper Archive</a><a href="https://justinahiggins614-cmyk.github.io/signature-backend/">14 The Signature AI Mix and Match Generator</a><a href="https://justinahiggins614-cmyk.github.io/signature-boundless-generators/">15 The Signature Boundless Generator Archive</a><a href="https://justinahiggins614-cmyk.github.io/signature-ai-mixlab/">16 The Signature AI Mix Lab</a><a href="https://justinahiggins614-cmyk.github.io/signature-ai-olypics/">17 AI Olympics</a><a href="https://justinahiggins614-cmyk.github.io/signature-chip-maker/">18 The Signature Computer Chip Maker and Archive</a><a href="https://justinahiggins614-cmyk.github.io/signature-app-archive/">19 The Signature App Archive</a><a href="https://justinahiggins614-cmyk.github.io/signature-ai-robot-matcher/">20 The Signature AI Robot Matcher</a><a href="https://justinahiggins614-cmyk.github.io/signature-experiment-solver/">21 The Signature Experiment Solver</a><a href="https://justinahiggins614-cmyk.github.io/signature-ai-image-video-maker/">22 Signature AI Pixel</a><a href="https://justinahiggins614-cmyk.github.io/signature-ai-song-maker/">23 Signature Music Studio</a><a href="https://justinahiggins614-cmyk.github.io/signature-fixit/">24 The Signature Mr Fix-It</a><a href="https://justinahiggins614-cmyk.github.io/signature-university/">25 The Signature University</a><a href="https://justinahiggins614-cmyk.github.io/signature-cyber-mega-mall/">26 The Signature Cyber Mega-Mall</a><a href="https://justinahiggins614-cmyk.github.io/signature-3d-print/">27 The Signature 3D Print Mega Mall</a><a href="https://justinahiggins614-cmyk.github.io/signature-flight-school/">29 The Signature Flight School</a><a href="https://justinahiggins614-cmyk.github.io/signature-game-store/">30 The Signature Game Store</a><a href="https://justinahiggins614-cmyk.github.io/signature-website-creator/">31 The Signature Website Creator</a><br><span class="here">28 Signature Earth — YOU ARE HERE</span></div>
-  <footer>Signature Earth · place data © GeoNames (CC-BY 4.0)</footer>
+  <footer>Signature Earth · place data © GeoNames (CC-BY 4.0) · borders © Natural Earth (public domain) · elevation: SRTM/ETOPO via Mapzen Terrarium (public domain) · addresses: © OpenStreetMap contributors (ODbL)</footer>
 </div>
+
+<button id="aiFab" aria-label="Ask the Earth AI" style="position:fixed;right:16px;bottom:16px;z-index:2000;background:var(--gold);color:#101010;border:0;border-radius:999px;padding:14px 20px;font-weight:800;font-size:1rem;cursor:pointer;box-shadow:0 4px 18px rgba(0,0,0,.5)">🤖 Earth AI</button>
+<div id="aiPanel" role="dialog" aria-label="Earth AI chat" style="position:fixed;right:12px;bottom:76px;z-index:2000;width:min(380px,calc(100vw - 24px));max-height:min(560px,72vh);display:none;flex-direction:column;background:#0d1530;border:2px solid var(--gold);border-radius:16px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.6)">
+  <div id="aiHead" style="background:#141d38;padding:12px 14px;color:#fff;font-weight:800;display:flex;justify-content:space-between;align-items:center"><span>🤖 Terra — your Earth AI</span><button id="aiClose" aria-label="Close" style="background:none;border:0;color:#9fb3e8;font-size:1.2rem;cursor:pointer">✕</button></div>
+  <div id="aiLog" aria-live="polite" style="flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:8px;min-height:120px"></div>
+  <div id="aiHint" style="padding:0 12px 10px;color:#8fa0c8;font-size:.78rem">Try: “take me to Paris” · “turn on borders” · “measure Paris to Tokyo”</div>
+  <form id="aiForm" style="display:flex;gap:8px;padding:10px;border-top:1px solid #2a3a66"><input id="aiInput" type="text" placeholder="Ask Terra anything…" aria-label="Ask Terra" autocomplete="off" style="flex:1;padding:11px 13px;border-radius:999px;border:2px solid #2a3a66;background:#101a33;color:#eef;font-size:.95rem"><button id="aiSend" type="submit" style="background:var(--gold);color:#101010;border:0;border-radius:999px;padding:11px 18px;font-weight:800;cursor:pointer">Send</button></form>
+</div>
+<style>
+#aiPanel.open{display:flex!important}
+#aiLog .msg{max-width:88%;padding:9px 12px;border-radius:14px;font-size:.93rem;line-height:1.45}
+#aiLog .msg.ai{background:#1a2547;color:#eef;align-self:flex-start;border-bottom-left-radius:4px}
+#aiLog .msg.me{background:var(--gold);color:#101010;align-self:flex-end;border-bottom-right-radius:4px;font-weight:600}
+#aiLog .msg .abtn{margin-top:8px}
+</style>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.149.0/three.min.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/site.js"></script>
+<script src="js/jahtalk.js"></script>
+<script src="js/finds-data.js"></script>
 <script src="js/globe.js"></script>
+<script src="js/earth-ai.js"></script>
 </body>
 </html>

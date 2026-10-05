@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Finds — Signature Earth</title>
+<meta name="description" content="Signature Earth's catalog of interesting finds: real geological formations, anomalies and discoveries — plus your own saved finds from AI scans.">
+<style>
+:root{--gold:#d4a017}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#eef;background:radial-gradient(1200px 800px at 70% -10%,#16244d 0%,#0b1020 55%,#060a16 100%);min-height:100vh}
+.wrap{max-width:1060px;margin:0 auto;padding:14px 12px 60px}
+.kicker{letter-spacing:.25em;font-size:.72rem;color:var(--gold);margin:10px 0 4px}
+h1{font-size:1.6rem;margin:.1em 0}
+.tabs{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+.tabs a{flex:1 1 110px;text-align:center;text-decoration:none;color:#eef;background:#141d38;border:2px solid #2a3a66;border-radius:999px;padding:11px 8px;font-weight:700}
+.tabs a.active{background:var(--gold);color:#101010;border-color:var(--gold)}
+.card{background:#101a33;border:1px solid #2a3a66;border-radius:14px;padding:18px;margin:16px 0}
+.card h2{margin:.2em 0;color:var(--gold);font-size:1.25rem}
+.card p,.card li{line-height:1.55;color:#dbe4ff}
+.btn{display:inline-block;background:var(--gold);color:#101010;font-weight:800;border:0;border-radius:999px;padding:12px 22px;text-decoration:none;margin:6px 8px 6px 0;cursor:pointer;font-size:1rem}
+.btn.ghost{background:#1a2547;color:#eef;border:2px solid #2a3a66}
+.abtn{background:#1a2547;color:#eef;border:2px solid #2a3a66;border-radius:999px;padding:8px 13px;font-weight:700;cursor:pointer;font-size:.88rem;margin:4px 6px 4px 0}
+.abtn:hover{border-color:var(--gold)}
+#best{border:2px solid var(--gold);background:linear-gradient(180deg,#1a1405,#101a33)}
+#best .crown{color:var(--gold);font-weight:800;letter-spacing:.15em;font-size:.8rem}
+.badge{display:inline-block;border-radius:999px;padding:3px 11px;font-size:.78rem;font-weight:800;margin:2px 4px 2px 0}
+.badge.ok{background:#0f2f1a;color:#7fe0a8;border:1px solid #2a6b45}
+.badge.myst{background:#2f1a2f;color:#f0a6f0;border:1px solid #6b2a6b}
+.badge.cat{background:#1a2547;color:#9fb3e8;border:1px solid #2a3a66}
+.badge.warn{background:#3a2c07;color:#ffe9a8;border:1px solid var(--gold)}
+.meta{color:#9fb3e8;font-size:.92rem;line-height:1.6}
+details.find{border:1px solid #2a3a66;border-radius:12px;margin:10px 0;background:#0d1530}
+details.find summary{cursor:pointer;padding:13px 15px;font-weight:700;list-style:none}
+details.find summary::-webkit-details-marker{display:none}
+details.find summary:hover{border-color:var(--gold)}
+details.find .body{padding:0 15px 15px}
+details.find .body p{color:#dbe4ff;line-height:1.55;margin:.5em 0}
+#q{width:100%;padding:12px 14px;border-radius:999px;border:2px solid #2a3a66;background:#101a33;color:#eef;font-size:1rem;margin:6px 0 2px}
+.honest{font-size:.85rem;color:#8fa0c8;border-top:1px dashed #2a3a66;margin-top:14px;padding-top:10px}
+.jahnet{margin:26px 0 10px;padding:14px;border:1px solid #2a3a66;border-radius:14px;background:#0d1530;font-size:.82rem;line-height:2.1}
+.jahnet-t{color:var(--gold);font-weight:800;letter-spacing:.2em;margin-right:10px}
+.jahnet a{color:#9fb3e8;text-decoration:none;margin:0 8px 0 0;white-space:nowrap}
+.jahnet .here{display:inline-block;background:#3a1414;color:#ffb3b3;border:1px solid #a33;border-radius:999px;padding:2px 12px;font-weight:800;margin:4px 0}
+footer{color:#7286b8;font-size:.78rem;text-align:center;margin:20px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="kicker">SITE 28 OF 31 · THE JAH NETWORK</p>
+  <h1>💎 Interesting Finds</h1>
+  <nav class="tabs" aria-label="Site sections">
+    <a href="index.html">🏠 Main</a>
+    <a href="globe.html">🌍 Globe</a>
+    <a href="map.html">🗺 Map</a>
+    <a href="places.html">🗂 Places A–Z</a>
+    <a href="finds.html" class="active">💎 Finds</a>
+  </nav>
+
+  <div class="card" id="best" aria-label="Best of the best find">
+    <p class="crown">👑 TERRA'S BEST OF THE BEST</p>
+    <div id="bestBody"></div>
+  </div>
+
+  <div class="card">
+    <h2>🔎 Find a find</h2>
+    <input id="q" type="search" placeholder="Search finds… (e.g. crater, salt, Peru)" aria-label="Search finds">
+    <p class="meta" style="margin:.4em 0">Seeded with real, documented features — plus everything <b>you</b> save from Terra's scans. “Unexplained” is used only where science genuinely debates it.</p>
+  </div>
+
+  <div class="card" id="userCard" style="display:none">
+    <h2>📒 Your discoveries</h2>
+    <div id="userList"></div>
+  </div>
+
+  <div class="card">
+    <h2>🗂 All finds A–Z</h2>
+    <div id="azList"></div>
+  </div>
+
+  <div class="card honest">
+    <h2 style="font-size:1rem">How finds get here</h2>
+    <p class="meta">Terra's treasure, scientist and prospector scans flag candidates from real satellite pixels and terrain numbers — every scan hit says plainly whether it is a <b>candidate</b> or an <b>indicator</b>. Nothing here is invented: seeded finds are documented real places, and scan hits are labeled with exactly how sure the analysis is.</p>
+  </div>
+
+  <div class="jahnet"><span class="jahnet-t">THE JAH NETWORK</span><span class="here">28 Signature Earth — YOU ARE HERE</span> <a href="index.html" style="color:#9fb3e8">← back to top for the full network list</a></div>
+  <footer>Signature Earth · finds are real documented features or your own scan discoveries — nothing invented</footer>
+</div>
+<script src="js/audio.js"></script>
+<script src="js/site.js"></script>
+<script src="js/finds-data.js"></script>
+<script>
+(function () {
+'use strict';
+function esc(s) { return SE.esc(s); }
+function badges(f) {
+  var h = '<span class="badge cat">' + esc(f.cat) + '</span>';
+  h += f.status === 'unexplained'
+    ? '<span class="badge myst">❓ unexplained' + (f.statusNote ? ' — ' + esc(f.statusNote) : '') + '</span>'
+    : '<span class="badge ok">✓ documented</span>';
+  if (f.user) h += '<span class="badge warn">your discovery</span>';
+  return h;
+}
+function findText(f) {
+  return f.name + '. ' + f.what + ' ' + f.why + ' Coordinates: ' + SE.fmtCoords(f.la, f.lo) + '.';
+}
+function findCard(f, open) {
+  var d = document.createElement('details');
+  d.className = 'find'; if (open) d.open = true;
+  var s = document.createElement('summary');
+  s.innerHTML = '💎 ' + esc(f.name) + ' <span style="color:#9fb3e8;font-weight:400">· ' + esc(f.country || '') + '</span>';
+  var b = document.createElement('div'); b.className = 'body';
+  b.innerHTML =
+    '<p>' + badges(f) + '</p>' +
+    '<p class="meta">📍 ' + esc(SE.fmtCoords(f.la, f.lo)) + '</p>' +
+    '<p><b>What it is:</b> ' + esc(f.what) + '</p>' +
+    '<p><b>Why it matters:</b> ' + esc(f.why) + '</p>' +
+    (f.value ? '<p><b>Value note:</b> ' + esc(f.value) + '</p>' : '');
+  var acts = document.createElement('div');
+  function btn(label, fn) {
+    var x = document.createElement('button'); x.className = 'abtn'; x.textContent = label;
+    x.onclick = fn; acts.appendChild(x); return x;
+  }
+  btn('🗺 Open in Map', function () { location.href = 'map.html#ll=' + f.la.toFixed(4) + ',' + f.lo.toFixed(4); });
+  btn('🌍 Open in Globe', function () { location.href = 'globe.html?ll=' + f.la.toFixed(4) + ',' + f.lo.toFixed(4); });
+  btn('🔊 Read aloud', function () { JAHaudio.speak(findText(f)); });
+  btn('📋 Copy', function () { SE.copyText(findText(f) + ' See it: ' + location.origin + location.pathname.replace(/finds\.html$/, 'map.html') + '#ll=' + f.la.toFixed(4) + ',' + f.lo.toFixed(4), null); });
+  btn('⬇ Download', function () { SE.download('signature-earth-find-' + f.id + '.json', JSON.stringify(f, null, 2)); });
+  if (f.user) btn('🗑 Remove', function () {
+    var list = EarthFinds.loadUser().filter(function (o) { return o.id !== f.id; });
+    EarthFinds.saveUser(list); renderAll();
+  });
+  b.appendChild(acts);
+  d.appendChild(s); d.appendChild(b);
+  return d;
+}
+function renderAll() {
+  var q = (document.getElementById('q').value || '').toLowerCase();
+  var seeds = EarthFinds.FINDS.filter(function (f) {
+    return !q || (f.name + ' ' + f.country + ' ' + f.what + ' ' + f.cat).toLowerCase().indexOf(q) >= 0;
+  });
+  var mine = EarthFinds.loadUser().filter(function (f) {
+    return !q || (f.name + ' ' + f.what).toLowerCase().indexOf(q) >= 0;
+  });
+  // best of the best
+  var best = document.getElementById('bestBody'); best.innerHTML = '';
+  EarthFinds.get(EarthFinds.BEST).then(function (f) { best.appendChild(findCard(f, true)); });
+  // user finds
+  var uc = document.getElementById('userCard'), ul = document.getElementById('userList');
+  ul.innerHTML = '';
+  if (mine.length) { uc.style.display = ''; mine.forEach(function (f) { ul.appendChild(findCard(f, false)); }); }
+  else uc.style.display = 'none';
+  // A-Z
+  var az = document.getElementById('azList'); az.innerHTML = '';
+  seeds.sort(function (a, b) { return a.name.localeCompare(b.name); })
+    .forEach(function (f) { az.appendChild(findCard(f, false)); });
+  if (!seeds.length && !mine.length) az.innerHTML = '<p class="meta">No finds match — try another word.</p>';
+}
+document.getElementById('q').addEventListener('input', renderAll);
+renderAll();
+})();
+</script>
+</body>
+</html>

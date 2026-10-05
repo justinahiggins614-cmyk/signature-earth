@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Map — Signature Earth</title>
+<meta name="description" content="Signature Earth map mode: pan and zoom from the whole planet down to houses, MapQuest-style. Real satellite + aerial imagery, measure, search.">
+<link rel="stylesheet" href="assets/leaflet/leaflet.css">
+<style>
+:root{--gold:#d4a017}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#eef;background:#060a16;min-height:100vh}
+.wrap{max-width:1060px;margin:0 auto;padding:14px 12px 40px}
+.kicker{letter-spacing:.25em;font-size:.72rem;color:var(--gold);margin:10px 0 4px}
+h1{font-size:1.6rem;margin:.1em 0}
+.tabs{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+.tabs a{flex:1 1 110px;text-align:center;text-decoration:none;color:#eef;background:#141d38;border:2px solid #2a3a66;border-radius:999px;padding:11px 8px;font-weight:700}
+.tabs a.active{background:var(--gold);color:#101010;border-color:var(--gold)}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
+.searchwrap{position:relative;flex:1 1 220px}
+#search{width:100%;padding:12px 14px;border-radius:999px;border:2px solid #2a3a66;background:#101a33;color:#eef;font-size:1rem}
+#suggest{position:absolute;top:110%;left:0;right:0;background:#101a33;border:1px solid #2a3a66;border-radius:12px;max-height:260px;overflow:auto;z-index:1000;display:none}
+#suggest .srow{display:block;width:100%;text-align:left;background:none;border:0;color:#eef;padding:10px 12px;cursor:pointer;font-size:.95rem}
+#suggest .srow:hover{background:#1c2a55}
+#suggest .srow span{color:#9fb3e8;font-size:.85rem}
+.tbtn{background:#141d38;color:#eef;border:2px solid #2a3a66;border-radius:999px;padding:10px 14px;font-weight:700;cursor:pointer;font-size:.95rem}
+.tbtn.on{background:var(--gold);color:#101010;border-color:var(--gold)}
+.tbtn:hover{border-color:var(--gold)}
+#stage{position:relative;border:1px solid #2a3a66;border-radius:14px;overflow:hidden;background:#02040a}
+#map{width:100%;height:min(70vh,600px);background:#0a1230}
+#coords{position:absolute;left:10px;bottom:26px;color:#ffe9a8;font-size:.8rem;background:rgba(6,10,22,.7);padding:4px 10px;border-radius:999px;pointer-events:none;z-index:500}
+#mapmsg{position:absolute;inset:0;display:none;align-items:center;justify-content:center;color:#9fb3e8;font-size:1rem;background:#060a16;z-index:600;text-align:center;padding:20px}
+.ctylabel{background:rgba(6,10,22,.55);border:0;color:#ffe9a8;font-size:11px;font-weight:700;padding:1px 6px;border-radius:8px;white-space:nowrap;pointer-events:none}
+.leaflet-control-attribution{background:rgba(6,10,22,.7)!important;color:#8fa0c8!important;font-size:10px!important}
+.leaflet-control-attribution a{color:#9fb3e8!important}
+#layersPanel{display:none;background:#101a33;border:1px solid #2a3a66;border-radius:14px;padding:12px 16px;margin:10px 0}
+#layersPanel.open{display:block}
+#layersPanel label{display:block;color:#eef;padding:7px 0;font-size:.95rem;cursor:pointer}
+#layersPanel input{margin-right:9px;transform:scale(1.25)}
+#layersPanel h3{margin:.2em 0 .4em;color:var(--gold);font-size:1rem}
+#timectl{display:none;gap:10px;align-items:center;background:#101a33;border:1px solid #2a3a66;border-radius:14px;padding:10px 14px;margin:10px 0;flex-wrap:wrap}
+#timectl input[type=range]{flex:1;min-width:160px}
+#timectl .yr{color:var(--gold);font-weight:800;font-size:1.1rem;min-width:52px;text-align:center}
+.hint{color:#8fa0c8;font-size:.85rem;margin:8px 0}
+#measlabel{display:none;background:#3a2c07;border:1px solid var(--gold);border-radius:10px;padding:8px 12px;margin:10px 0;color:#ffe9a8;font-weight:700}
+#card{display:none;background:#101a33;border:1px solid var(--gold);border-radius:14px;padding:16px;margin:10px 0}
+#card.open{display:block}
+#card h2{margin:.1em 0;color:#fff}
+#card .meta{color:#9fb3e8;font-size:.92rem;line-height:1.6}
+#card .acts{margin-top:10px;display:flex;flex-wrap:wrap;gap:8px}
+.abtn{background:#1a2547;color:#eef;border:2px solid #2a3a66;border-radius:999px;padding:9px 14px;font-weight:700;cursor:pointer;font-size:.9rem}
+.abtn:hover{border-color:var(--gold)}
+/* AI pal */
+#aiFab{position:fixed;right:16px;bottom:16px;z-index:2000;background:var(--gold);color:#101010;border:0;border-radius:999px;padding:14px 20px;font-weight:800;font-size:1rem;cursor:pointer;box-shadow:0 4px 18px rgba(0,0,0,.5)}
+#aiPanel{position:fixed;right:12px;bottom:76px;z-index:2000;width:min(380px,calc(100vw - 24px));max-height:min(560px,72vh);display:none;flex-direction:column;background:#0d1530;border:2px solid var(--gold);border-radius:16px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.6)}
+#aiPanel.open{display:flex}
+#aiHead{background:#141d38;padding:12px 14px;color:#fff;font-weight:800;display:flex;justify-content:space-between;align-items:center}
+#aiHead button{background:none;border:0;color:#9fb3e8;font-size:1.2rem;cursor:pointer}
+#aiLog{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:8px;min-height:120px}
+#aiLog .msg{max-width:88%;padding:9px 12px;border-radius:14px;font-size:.93rem;line-height:1.45}
+#aiLog .msg.ai{background:#1a2547;color:#eef;align-self:flex-start;border-bottom-left-radius:4px}
+#aiLog .msg.me{background:var(--gold);color:#101010;align-self:flex-end;border-bottom-right-radius:4px;font-weight:600}
+#aiLog .msg .scanbtn{display:block;margin-top:8px}
+#aiForm{display:flex;gap:8px;padding:10px;border-top:1px solid #2a3a66}
+#aiInput{flex:1;padding:11px 13px;border-radius:999px;border:2px solid #2a3a66;background:#101a33;color:#eef;font-size:.95rem}
+#aiSend{background:var(--gold);color:#101010;border:0;border-radius:999px;padding:11px 18px;font-weight:800;cursor:pointer}
+#aiHint{padding:0 12px 10px;color:#8fa0c8;font-size:.78rem}
+.jahnet{margin:26px 0 10px;padding:14px;border:1px solid #2a3a66;border-radius:14px;background:#0d1530;font-size:.82rem;line-height:2.1}
+.jahnet-t{color:var(--gold);font-weight:800;letter-spacing:.2em;margin-right:10px}
+.jahnet a{color:#9fb3e8;text-decoration:none;margin:0 8px 0 0;white-space:nowrap}
+.jahnet .here{display:inline-block;background:#3a1414;color:#ffb3b3;border:1px solid #a33;border-radius:999px;padding:2px 12px;font-weight:800;margin:4px 0}
+footer{color:#7286b8;font-size:.78rem;text-align:center;margin:20px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="kicker">SITE 28 OF 31 · THE JAH NETWORK</p>
+  <h1>🗺 The Map</h1>
+  <nav class="tabs" aria-label="Site sections">
+    <a href="index.html">🏠 Main</a>
+    <a href="globe.html">🌍 Globe</a>
+    <a href="map.html" class="active">🗺 Map</a>
+    <a href="places.html">🗂 Places A–Z</a>
+    <a href="finds.html">💎 Finds</a>
+  </nav>
+
+  <div class="toolbar">
+    <div class="searchwrap">
+      <input id="search" type="search" placeholder="🔎 Search places or street addresses…" aria-label="Search places or addresses" autocomplete="off">
+      <div id="suggest" role="listbox"></div>
+    </div>
+    <button class="tbtn" id="btnMeasure" aria-pressed="false">📏 Measure</button>
+    <button class="tbtn" id="btnLayers" aria-pressed="false">🗺 Layers</button>
+    <button class="tbtn" id="btnTime" aria-pressed="false">🕰 Timelapse</button>
+    <button class="tbtn" id="btnReset">⟳ Reset view</button>
+  </div>
+
+  <div id="layersPanel" aria-label="Map layers">
+    <h3>🗺 Layers</h3>
+    <label><input type="checkbox" id="lyBorders"> Country borders <span style="color:#8fa0c8">(Natural Earth, public domain)</span></label>
+    <label><input type="checkbox" id="lyLabels"> Country labels</label>
+    <label><input type="checkbox" id="lyHill"> Terrain shading <span style="color:#8fa0c8">(from public elevation data)</span></label>
+  </div>
+
+  <div id="timectl" aria-label="Timelapse controls">
+    <span style="color:#9fb3e8;font-size:.9rem">🕰 NASA satellite timelapse</span>
+    <input type="range" id="timeslider" min="2001" max="2024" step="1" value="2020" aria-label="Timelapse year">
+    <span class="yr" id="timeyear">2020</span>
+    <button class="tbtn" id="btnTimePlay">▶ Play years</button>
+  </div>
+
+  <div id="stage">
+    <div id="map" role="application" aria-label="Interactive world map"></div>
+    <div id="coords">—</div>
+    <div id="mapmsg">🗺 Waking up the map…</div>
+  </div>
+  <p class="hint">Drag to pan · pinch or scroll to zoom — all the way down to houses (deepest aerial views cover the US; elsewhere the map says so honestly). Tap points in 📏 Measure mode for distance, three or more for area.</p>
+
+  <div id="measlabel"></div>
+
+  <div id="card" aria-live="polite">
+    <h2 id="cardName"></h2>
+    <div class="meta" id="cardMeta"></div>
+    <div class="acts">
+      <button class="abtn" id="cardStand">🧍 Stand here</button>
+      <button class="abtn" id="cardRead">🔊 Read aloud</button>
+      <button class="abtn" id="cardCopy">📋 Copy</button>
+      <button class="abtn" id="cardClose">✕ Close</button>
+    </div>
+  </div>
+
+  <div class="jahnet"><span class="jahnet-t">THE JAH NETWORK</span><span class="here">28 Signature Earth — YOU ARE HERE</span> <a href="index.html" style="color:#9fb3e8">← back to top for the full network list</a></div>
+  <footer>Imagery: NASA Visible Earth + NASA GIBS (public domain) · USDA NAIP via USGS The National Map (public domain) · Sentinel-2 via EOX/Copernicus · Borders: Natural Earth (public domain) · Places: GeoNames (CC-BY 4.0) · Addresses: OpenStreetMap contributors (ODbL)</footer>
+</div>
+
+<button id="aiFab" aria-label="Ask the Earth AI">🤖 Earth AI</button>
+<div id="aiPanel" role="dialog" aria-label="Earth AI chat">
+  <div id="aiHead"><span>🤖 Terra — your Earth AI</span><button id="aiClose" aria-label="Close">✕</button></div>
+  <div id="aiLog" aria-live="polite"></div>
+  <div id="aiHint">Try: “take me to 1600 Amphitheatre Parkway” · “zoom to house level” · “full scan this area”</div>
+  <form id="aiForm"><input id="aiInput" type="text" placeholder="Ask Terra anything…" aria-label="Ask Terra" autocomplete="off"><button id="aiSend" type="submit">Send</button></form>
+</div>
+
+<script src="assets/leaflet/leaflet.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/site.js"></script>
+<script src="js/jahtalk.js"></script>
+<script src="js/finds-data.js"></script>
+<script src="js/map.js"></script>
+<script src="js/earth-ai.js"></script>
+</body>
+</html>

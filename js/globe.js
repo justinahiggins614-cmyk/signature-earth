@@ -46,6 +46,8 @@ camera = new THREE.PerspectiveCamera(45, 1, 0.1, 200);
 var DEF_DIST = 3.2;
 camera.position.set(0, 0.6, DEF_DIST);
 camera.lookAt(0, 0, 0);
+// camera tilt (Google-Earth-style navigation): elevation angle of the camera
+var tiltA = 0.19, TILT_MIN = -0.45, TILT_MAX = 1.15;
 globeGroup = new THREE.Group();
 scene.add(globeGroup);
 
@@ -64,10 +66,11 @@ new THREE.TextureLoader().load('assets/earth-texture.png', function (t) {
   sphere.material.map = t; sphere.material.needsUpdate = true;
 });
 sphere = new THREE.Mesh(
-  new THREE.SphereGeometry(1, 72, 72),
+  new THREE.SphereGeometry(1, 128, 96),
   new THREE.MeshPhongMaterial({ map: tex, shininess: 10 })
 );
 globeGroup.add(sphere);
+setTerrain(true); // 3D terrain on by default (public elevation data)
 var sun = new THREE.DirectionalLight(0xffffff, 1.15); sun.position.set(5, 2.5, 4); scene.add(sun);
 scene.add(new THREE.AmbientLight(0x8fa3cc, 0.5));
 // atmosphere glow
@@ -175,6 +178,7 @@ function handleTap(e) {
   if (mh && mh.object.userData.rec) { openCard(mh.object.userData.rec); return; }
   var ll = pickLatLon(n.x, n.y);
   if (!ll) return;
+  if (readout) readout.textContent = SE.fmtCoords(ll.la, ll.lo); // touch: tap updates readout
   if (measureMode) addMeasurePoint(ll);
 }
 
@@ -227,6 +231,11 @@ function ensureIndex() {
       var hit = rows.find(function (r) { return String(r[6]) === qp; });
       if (hit) selectPlace(rowToRec(hit));
     }
+    var llp = new URLSearchParams(location.search).get('ll');
+    if (llp) {
+      var m = llp.match(/(-?[\d.]+),(-?[\d.]+)/);
+      if (m) selectPlace({ id: 'll', n: 'Pinned spot', a: 'Pinned spot', la: +m[1], lo: +m[2], c: '', r: '', p: 0, e: null, t: '' });
+    }
     return rows;
   }).catch(function (err) {
     indexLoading = null;
@@ -262,7 +271,11 @@ searchInput.addEventListener('input', function () {
       else if (nm.indexOf(q) > 0) contains.push(rows[i]);
     }
     lastResults = starts.concat(contains).slice(0, 8);
-    if (!lastResults.length) { suggest.innerHTML = '<button disabled>No places found — try another spelling.</button>'; return; }
+    if (!lastResults.length) {
+      suggest.innerHTML = '<button id="addrBtn">🌐 No named place — search street addresses…</button>';
+      document.getElementById('addrBtn').onclick = function () { nominatimSearch(searchInput.value.trim()); };
+      return;
+    }
     suggest.innerHTML = '';
     lastResults.forEach(function (r, i) {
       var b = document.createElement('button');
@@ -281,6 +294,33 @@ searchInput.addEventListener('keydown', function (e) {
 document.addEventListener('click', function (e) {
   if (!e.target.closest('.searchwrap')) suggest.style.display = 'none';
 });
+// street-address search via Nominatim (free, OSM contributors, attributed in footer)
+function nominatimSearch(q) {
+  suggest.style.display = 'block';
+  suggest.innerHTML = '<button disabled>🌐 Searching addresses…</button>';
+  fetch('https://nominatim.openstreetmap.org/search?format=json&limit=6&q=' + encodeURIComponent(q), {
+    headers: { 'Accept': 'application/json' }
+  }).then(function (r) { return r.json(); }).then(function (js) {
+    if (!js || !js.length) { suggest.innerHTML = '<button disabled>No address found — try a town or landmark.</button>'; return; }
+    suggest.innerHTML = '';
+    js.forEach(function (o) {
+      var label = (o.display_name || '').split(',').slice(0, 3).join(',');
+      var b = document.createElement('button');
+      b.innerHTML = '🏠 <b>' + SE.esc(label) + '</b>';
+      b.onclick = function () {
+        suggest.style.display = 'none'; searchInput.value = label;
+        selectPlace({
+          id: 'addr:' + o.place_id, n: label, a: label,
+          la: +o.lat, lo: +o.lon,
+          c: (o.display_name || '').split(',').pop().trim(), r: '', p: 0, e: null, t: ''
+        });
+      };
+      suggest.appendChild(b);
+    });
+  }).catch(function () {
+    suggest.innerHTML = '<button disabled>Address search is unreachable right now.</button>';
+  });
+}
 
 function selectPlace(rec) {
   stopTour();
@@ -329,35 +369,78 @@ btnMeasure.onclick = function () {
   btnMeasure.setAttribute('aria-pressed', measureMode ? 'true' : 'false');
   if (!measureMode) clearMeasure();
 };
+function fmtKm(km) {
+  if (km < 1) return Math.round(km * 1000).toLocaleString('en-US') + ' m';
+  if (km < 100) return km.toFixed(1) + ' km';
+  return Math.round(km).toLocaleString('en-US') + ' km';
+}
+function fmtKm2(km2) {
+  if (km2 < 1) return Math.round(km2 * 1e6).toLocaleString('en-US') + ' m²';
+  return km2.toLocaleString('en-US', { maximumFractionDigits: 1 }) + ' km²';
+}
+function ringAreaKm2(pts) { // spherical excess (Chamberlain-Duquette), pts=[{la,lo}]
+  var a = 0;
+  for (var i = 0; i < pts.length; i++) {
+    var p1 = pts[i], p2 = pts[(i + 1) % pts.length];
+    a += (p2.lo - p1.lo) * D2R * (2 + Math.sin(p1.la * D2R) + Math.sin(p2.la * D2R));
+  }
+  return Math.abs(a * 6371 * 6371 / 2);
+}
+var measureClose = null;
 function clearMeasure() {
   measureMeshes.forEach(function (m) { globeGroup.remove(m); });
-  measureMeshes = []; measurePts = []; measlabel.style.display = 'none'; measlabel.innerHTML = '';
+  measureMeshes = []; measurePts = [];
+  if (measureClose) { globeGroup.remove(measureClose); measureClose = null; }
+  measlabel.style.display = 'none'; measlabel.innerHTML = '';
+}
+function measureSeg(a, b, lift) {
+  var va = latLonToVec3(a.la, a.lo), vb = latLonToVec3(b.la, b.lo);
+  var pts = [];
+  for (var i = 0; i <= 32; i++) {
+    var v = va.clone().lerp(vb, i / 32).normalize().multiplyScalar(lift + Math.sin(Math.PI * i / 32) * 0.05);
+    pts.push(v);
+  }
+  return new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0xffb347 }));
+}
+function updateMeasureLabel() {
+  var n = measurePts.length;
+  if (n === 0) { measlabel.style.display = 'none'; return; }
+  if (n === 1) {
+    measlabel.innerHTML = '📏 First point set — tap a second point for distance, or keep tapping then ✓ Done for area.';
+  } else {
+    var html;
+    if (n === 2) {
+      html = '📏 ' + fmtKm(haversineKm(measurePts[0], measurePts[1]));
+    } else {
+      var per = 0, i;
+      for (i = 0; i < n; i++) per += haversineKm(measurePts[i], measurePts[(i + 1) % n]);
+      html = '📐 ' + fmtKm2(ringAreaKm2(measurePts)) + ' · edge ' + fmtKm(per);
+    }
+    html += ' <button class="abtn" id="measDone">✓ Done</button> <button class="abtn" id="measClear">✕ Clear</button>';
+    measlabel.innerHTML = html;
+    document.getElementById('measDone').onclick = function () {
+      measureMode = false; btnMeasure.classList.remove('on'); btnMeasure.setAttribute('aria-pressed', 'false');
+      JAHaudio.speak(measlabel.textContent.replace(/✓ Done|✕ Clear/g, '').trim());
+    };
+    document.getElementById('measClear').onclick = clearMeasure;
+  }
+  measlabel.style.display = 'block';
 }
 function addMeasurePoint(ll) {
-  if (measurePts.length >= 2) clearMeasure();
   measurePts.push(ll);
   var dot = new THREE.Mesh(new THREE.SphereGeometry(0.015, 12, 12), new THREE.MeshBasicMaterial({ color: 0xff5533 }));
   dot.position.copy(latLonToVec3(ll.la, ll.lo).multiplyScalar(1.015));
   globeGroup.add(dot); measureMeshes.push(dot);
-  if (measurePts.length === 2) {
-    var a = latLonToVec3(measurePts[0].la, measurePts[0].lo), b = latLonToVec3(measurePts[1].la, measurePts[1].lo);
-    var pts = [];
-    for (var i = 0; i <= 64; i++) {
-      var v = a.clone().lerp(b, i / 64).normalize().multiplyScalar(1.02 + Math.sin(Math.PI * i / 64) * 0.06);
-      pts.push(v);
-    }
-    var line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0xffb347 }));
-    globeGroup.add(line); measureMeshes.push(line);
-    var km = haversineKm(measurePts[0], measurePts[1]);
-    var mi = km * 0.621371;
-    measlabel.innerHTML = '📏 ' + Math.round(km).toLocaleString('en-US') + ' km (' + Math.round(mi).toLocaleString('en-US') + ' mi) <button class="abtn" id="measClear" style="margin-left:10px">✕ Clear</button>';
-    measlabel.style.display = 'block';
-    document.getElementById('measClear').onclick = clearMeasure;
-    JAHaudio.speak('Distance: ' + Math.round(km).toLocaleString('en-US') + ' kilometers.');
-  } else {
-    measlabel.innerHTML = '📏 First point set — tap a second point on the globe.';
-    measlabel.style.display = 'block';
+  if (measurePts.length >= 2) {
+    var seg = measureSeg(measurePts[measurePts.length - 2], ll, 1.02);
+    globeGroup.add(seg); measureMeshes.push(seg);
   }
+  if (measureClose) { globeGroup.remove(measureClose); measureClose = null; }
+  if (measurePts.length >= 3) {
+    measureClose = measureSeg(ll, measurePts[0], 1.02);
+    globeGroup.add(measureClose);
+  }
+  updateMeasureLabel();
 }
 
 // ---------- tours ----------
@@ -448,6 +531,128 @@ function renderSaved() {
   });
 }
 
+// ---------- layers: borders, labels, 3D terrain (public data only) ----------
+var bordersGroup = null, labelsGroup = null;
+var layersOn = { borders: false, labels: false, terrain: true };
+var elevData = null; // {w,h,px:Uint8ClampedArray} equirect elevation 0..255
+function ensureElevation(cb) {
+  if (elevData) { cb(elevData); return; }
+  var img = new Image();
+  img.onload = function () {
+    try {
+      var c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+      var g = c.getContext('2d'); g.drawImage(img, 0, 0);
+      var d = g.getImageData(0, 0, c.width, c.height).data;
+      var px = new Uint8ClampedArray(c.width * c.height);
+      for (var i = 0; i < px.length; i++) px[i] = d[i * 4];
+      elevData = { w: c.width, h: c.height, px: px };
+      cb(elevData);
+    } catch (e) { cb(null); }
+  };
+  img.onerror = function () { cb(null); };
+  img.src = 'assets/elevation.png';
+}
+function elevMeters(la, lo) {
+  if (!elevData) return 0;
+  var x = Math.min(elevData.w - 1, Math.max(0, Math.floor((lo + 180) / 360 * elevData.w)));
+  var y = Math.min(elevData.h - 1, Math.max(0, Math.floor((90 - la) / 180 * elevData.h)));
+  return elevData.px[y * elevData.w + x] / 255 * 9500 - 500;
+}
+var sphereBase = null, TER_EXAG = 45;
+function applyTerrain(on) {
+  layersOn.terrain = on;
+  var pos = sphere.geometry.attributes.position;
+  if (!sphereBase) {
+    sphereBase = new Float32Array(pos.array.length);
+    sphereBase.set(pos.array);
+  }
+  if (!on || !elevData) {
+    pos.array.set(sphereBase);
+  } else {
+    var v = new THREE.Vector3();
+    for (var i = 0; i < pos.count; i++) {
+      v.set(sphereBase[i * 3], sphereBase[i * 3 + 1], sphereBase[i * 3 + 2]);
+      var ll = vec3ToLatLon(v.clone().normalize());
+      var r = 1 + (elevMeters(ll.la, ll.lo) / 6371000) * TER_EXAG;
+      v.normalize().multiplyScalar(r);
+      pos.array[i * 3] = v.x; pos.array[i * 3 + 1] = v.y; pos.array[i * 3 + 2] = v.z;
+    }
+  }
+  pos.needsUpdate = true;
+  sphere.geometry.computeVertexNormals();
+}
+function setTerrain(on) {
+  ensureElevation(function () { applyTerrain(on); });
+}
+function setBordersGlobe(on) {
+  layersOn.borders = on;
+  if (!bordersGroup) {
+    bordersGroup = new THREE.Group();
+    fetch('data/borders.geojson').then(function (r) { return r.json(); }).then(function (gj) {
+      gj.features.forEach(function (f) {
+        var polys = f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates;
+        polys.forEach(function (poly) {
+          poly.forEach(function (ring) {
+            var pts = ring.map(function (c) { return latLonToVec3(c[1], c[0]).multiplyScalar(1.004); });
+            bordersGroup.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts),
+              new THREE.LineBasicMaterial({ color: 0xd4a017, transparent: true, opacity: 0.75 })));
+          });
+        });
+      });
+      if (layersOn.borders) globeGroup.add(bordersGroup);
+    }).catch(function () {});
+    return;
+  }
+  if (on) globeGroup.add(bordersGroup); else globeGroup.remove(bordersGroup);
+}
+function setLabelsGlobe(on) {
+  layersOn.labels = on;
+  if (!labelsGroup) {
+    labelsGroup = new THREE.Group();
+    fetch('data/borders.geojson').then(function (r) { return r.json(); }).then(function (gj) {
+      gj.features.forEach(function (f) {
+        var polys = f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates;
+        var best = null, bestW = 0;
+        polys.forEach(function (poly) {
+          var ring = poly[0], minx = 1e9, maxx = -1e9, miny = 1e9, maxy = -1e9, i;
+          for (i = 0; i < ring.length; i++) {
+            var c = ring[i];
+            if (c[0] < minx) minx = c[0]; if (c[0] > maxx) maxx = c[0];
+            if (c[1] < miny) miny = c[1]; if (c[1] > maxy) maxy = c[1];
+          }
+          var w = (maxx - minx) * (maxy - miny);
+          if (w > bestW) { bestW = w; best = [(miny + maxy) / 2, (minx + maxx) / 2]; }
+        });
+        if (!best) return;
+        var c2 = document.createElement('canvas'); c2.width = 256; c2.height = 64;
+        var g2 = c2.getContext('2d');
+        g2.font = 'bold 30px system-ui,sans-serif'; g2.textAlign = 'center'; g2.textBaseline = 'middle';
+        g2.lineWidth = 5; g2.strokeStyle = 'rgba(4,8,18,0.9)';
+        g2.strokeText(f.properties.name, 128, 32); g2.fillStyle = '#ffe9a8';
+        g2.fillText(f.properties.name, 128, 32);
+        var tex2 = new THREE.CanvasTexture(c2);
+        var sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex2, transparent: true, depthTest: false, opacity: 0.92 }));
+        sp.position.copy(latLonToVec3(best[0], best[1]).multiplyScalar(1.02));
+        sp.scale.set(0.34, 0.085, 1);
+        labelsGroup.add(sp);
+      });
+      if (layersOn.labels) globeGroup.add(labelsGroup);
+    }).catch(function () {});
+    return;
+  }
+  if (on) globeGroup.add(labelsGroup); else globeGroup.remove(labelsGroup);
+}
+// compass: click resets a north-up-ish default view (keeps zoom)
+var compassEl = document.getElementById('compass');
+if (compassEl) {
+  compassEl.style.pointerEvents = 'auto';
+  compassEl.style.cursor = 'pointer';
+  compassEl.title = 'Reset north-up view';
+  compassEl.onclick = function () {
+    targetRX = 0.42; targetRY = -1.1; tiltA = 0.19; idleT = 0; flying = false;
+  };
+}
+
 // ---------- toolbar extras ----------
 document.getElementById('btnZoomIn').onclick = function () { targetDist = Math.max(1.7, targetDist * 0.82); idleT = 0; };
 document.getElementById('btnZoomOut').onclick = function () { targetDist = Math.min(6, targetDist * 1.22); idleT = 0; };
@@ -477,12 +682,93 @@ function animate() {
     globeGroup.rotation.x += (targetRX - globeGroup.rotation.x) * Math.min(1, dt * 7);
     var cd = camera.position.length();
     var nd = cd + (targetDist - cd) * Math.min(1, dt * 6);
-    camera.position.setLength(nd);
+    camera.position.set(0, Math.sin(tiltA), Math.cos(tiltA)).multiplyScalar(nd);
     camera.lookAt(0, 0, 0);
   }
   if (needle) needle.style.transform = 'rotate(' + (-globeGroup.rotation.y * R2D % 360) + 'deg)';
   renderer.render(scene, camera);
 }
+// tilt controls (Google-Earth-style navigation)
+function wireTilt(id, dir) {
+  var b = document.getElementById(id);
+  if (b) b.onclick = function () {
+    tiltA = Math.max(TILT_MIN, Math.min(TILT_MAX, tiltA + dir * 0.12));
+    idleT = 0;
+  };
+}
+wireTilt('btnTiltUp', 1); wireTilt('btnTiltDn', -1);
+// layers panel
+var layersPanelOpen = false;
+var btnLayers = document.getElementById('btnLayers');
+if (btnLayers) btnLayers.onclick = function () {
+  layersPanelOpen = !layersPanelOpen;
+  document.getElementById('layersPanel').classList.toggle('open', layersPanelOpen);
+  btnLayers.classList.toggle('on', layersPanelOpen);
+};
+function wireLayerChk(id, fn) {
+  var c = document.getElementById(id);
+  if (c) c.onchange = function () { fn(c.checked); };
+}
+wireLayerChk('lyBorders', setBordersGlobe);
+wireLayerChk('lyLabels', setLabelsGlobe);
+wireLayerChk('lyTerrain', setTerrain);
+var btnAiGlobe = document.getElementById('btnAi');
+if (btnAiGlobe) btnAiGlobe.onclick = function () { if (window.EarthAI) window.EarthAI.toggle(); };
+
+// ---------- EarthControl API (drives the globe from the AI pal) ----------
+function zoomToDist(z) { return Math.max(1.7, Math.min(6, 7.5 - z * 0.35)); }
+window.EarthControl = {
+  mode: 'globe',
+  flyTo: function (la, lo, zoom, rec) {
+    if (zoom) targetDist = zoomToDist(zoom);
+    if (rec) selectPlace(rec);
+    else {
+      addMarker({ la: la, lo: lo, n: 'Pinned spot' });
+      flyTo(la, lo);
+    }
+  },
+  setZoom: function (z) { targetDist = zoomToDist(z); idleT = 0; },
+  zoomIn: function () { targetDist = Math.max(1.7, targetDist * 0.82); idleT = 0; },
+  zoomOut: function () { targetDist = Math.min(6, targetDist * 1.22); idleT = 0; },
+  getView: function () {
+    globeGroup.updateMatrixWorld(true);
+    var dir = camera.position.clone().normalize();
+    var local = globeGroup.worldToLocal(dir.clone()).normalize();
+    var ll = vec3ToLatLon(local);
+    var ang = Math.asin(Math.min(1, 1 / camera.position.length())) * R2D;
+    return { la: ll.la, lo: ll.lo, zoom: 7.5 - camera.position.length() / 0.35, bbox: [ll.la - ang, ll.lo - ang, ll.la + ang, ll.lo + ang] };
+  },
+  toggleLayer: function (name, on) {
+    if (name === 'borders') { setBordersGlobe(on); var a = document.getElementById('lyBorders'); if (a) a.checked = on; }
+    else if (name === 'labels') { setLabelsGlobe(on); var b = document.getElementById('lyLabels'); if (b) b.checked = on; }
+    else if (name === 'terrain') { setTerrain(on); var c = document.getElementById('lyTerrain'); if (c) c.checked = on; }
+  },
+  measure: function (a, b) {
+    if (!measureMode) btnMeasure.onclick();
+    clearMeasure();
+    addMeasurePoint({ la: a.la, lo: a.lo });
+    addMeasurePoint({ la: b.la, lo: b.lo });
+  },
+  geocode: function (q) {
+    return ensureIndex().then(function (rows) {
+      var ql = q.toLowerCase();
+      for (var i = 0; i < rows.length; i++) {
+        if (rows[i][0].toLowerCase() === ql)
+          return { kind: 'place', label: rows[i][0], sub: rows[i][3], la: rows[i][1], lo: rows[i][2], zoom: 10 };
+      }
+      return fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(q), {
+        headers: { Accept: 'application/json' }
+      }).then(function (r) { return r.json(); }).then(function (js) {
+        if (js && js.length) {
+          var o = js[0];
+          return { kind: 'address', label: (o.display_name || '').split(',').slice(0, 3).join(','), sub: 'address', la: +o.lat, lo: +o.lon, zoom: 16 };
+        }
+        return null;
+      });
+    });
+  }
+};
+
 globeGroup.rotation.set(targetRX, targetRY, 0);
 animate();
 ensureIndex().catch(function () {});
