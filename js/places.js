@@ -31,6 +31,8 @@ fetch('data/index/stats.json').then(function (r) { return r.json(); }).then(func
   pickOfDay();
 }).catch(function () {
   lettersEl.innerHTML = '<p style="color:#9fb3e8">Place data is still loading — reload in a moment.</p>';
+  var sl = document.getElementById('statline');
+  if (sl) sl.textContent = 'The gazetteer is waking up — reload in a moment.';
 });
 
 function hashStr(s) { var h = 2166136261; for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
