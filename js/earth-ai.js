@@ -81,7 +81,9 @@ function handle(q) {
   // general chat: GuideTalk v2.1 with conversation memory
   var ans;
   try {
-    ans = window.JAHtalk ? JAHtalk.reply(TERRA, q, 'earth-terra')
+    /* JAHProfile: per-profile chat memory ("train once"); public keeps the shared key + 24h expiry. */
+    var _ck=(typeof JAHProfile!=="undefined")?JAHProfile.chatKey('earth-terra'):'earth-terra';
+    ans = window.JAHtalk ? JAHtalk.reply(TERRA, q, _ck)
       : 'I\'m having trouble loading my voice — but I can still fly the map. Try "take me to Paris".';
   } catch (e) {
     ans = 'I didn\'t catch that — try "take me to Paris", "zoom in", or "full scan this area".';

@@ -35,6 +35,7 @@ h1{font-size:2.2rem;margin:.1em 0;color:#fff}
 footer{color:#7286b8;font-size:.8rem;text-align:center;margin:26px 0 10px}
 ol.steps li{margin:.5em 0}
 </style>
+<script src="js/signin.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -160,7 +161,9 @@ document.getElementById('stopGuide').onclick=function(){ JAHaudio.stop(); };
 /* ---------- first-visit WELCOME overlay (2026-10-04 standard): centered modal.
    NO auto-scroll, NO spotlight, NO section jumps — the page stays put, the overlay teaches. ---------- */
 var FLAG="jah-tour-seen-earth";
-function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+/* JAHProfile storage wrapper (JAHPS): public visitors pass keys through unprefixed (behavior unchanged); signed-in profiles get per-profile namespaced storage. */
+var JAHPS=(function(){try{return (typeof JAHProfile!=="undefined")&&JAHProfile.store?JAHProfile.store:localStorage;}catch(e){return localStorage;}})();
+function ls(k,v){try{if(v===undefined)return JAHPS.get(k);JAHPS.set(k,v)}catch(e){return null}}
 var w=document.getElementById("jahWelcome"),
     guide=document.getElementById("jahGuide"),
     guideCard=document.getElementById("jahGuideCard"),
@@ -185,5 +188,16 @@ guide.addEventListener("click",function(e){if(e.target===guide)closeGuide()});
 var __qs="",__hash="";try{__qs=location.search;__hash=location.hash}catch(e){}
 if(!ls(FLAG)&&__qs.indexOf("find=")<0&&__hash.indexOf("ll=")<0){setTimeout(openWelcome,900)}
 }catch(e){}})();</script>
+<script>
+(function () {
+  /* JAHProfile sign-in — mount the header button. signin.js is already loaded in <head>. */
+  var mount = document.querySelector('header .booksearch') ||
+              document.querySelector('nav.jtabbar') ||
+              document.querySelector('header nav') ||
+              document.querySelector('header') ||
+              document.body;
+  if (window.JAHProfile && JAHProfile.ui) JAHProfile.ui.renderButton(mount);
+})();
+</script>
 </body>
 </html>

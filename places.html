@@ -47,6 +47,7 @@ h1{font-size:1.8rem;margin:.1em 0}
 .jahnet .here{display:inline-block;background:#3a1414;color:#ffb3b3;border:1px solid #a33;border-radius:999px;padding:2px 12px;font-weight:800;margin:4px 0}
 footer{color:#7286b8;font-size:.78rem;text-align:center;margin:20px 0}
 </style>
+<script src="js/signin.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -153,7 +154,9 @@ footer{color:#7286b8;font-size:.78rem;text-align:center;margin:20px 0}
 /* ---------- first-visit WELCOME overlay (2026-10-04 standard): centered modal.
    NO auto-scroll, NO spotlight, NO section jumps — the page stays put, the overlay teaches. ---------- */
 var FLAG="jah-tour-seen-earth";
-function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+/* JAHProfile storage wrapper (JAHPS): public visitors pass keys through unprefixed (behavior unchanged); signed-in profiles get per-profile namespaced storage. */
+var JAHPS=(function(){try{return (typeof JAHProfile!=="undefined")&&JAHProfile.store?JAHProfile.store:localStorage;}catch(e){return localStorage;}})();
+function ls(k,v){try{if(v===undefined)return JAHPS.get(k);JAHPS.set(k,v)}catch(e){return null}}
 var w=document.getElementById("jahWelcome"),
     guide=document.getElementById("jahGuide"),
     guideCard=document.getElementById("jahGuideCard"),
@@ -178,5 +181,16 @@ guide.addEventListener("click",function(e){if(e.target===guide)closeGuide()});
 var __qs="",__hash="";try{__qs=location.search;__hash=location.hash}catch(e){}
 if(!ls(FLAG)&&__qs.indexOf("find=")<0&&__hash.indexOf("ll=")<0){setTimeout(openWelcome,900)}
 }catch(e){}})();</script>
+<script>
+(function () {
+  /* JAHProfile sign-in — mount the header button. signin.js is already loaded in <head>. */
+  var mount = document.querySelector('header .booksearch') ||
+              document.querySelector('nav.jtabbar') ||
+              document.querySelector('header nav') ||
+              document.querySelector('header') ||
+              document.body;
+  if (window.JAHProfile && JAHProfile.ui) JAHProfile.ui.renderButton(mount);
+})();
+</script>
 </body>
 </html>
