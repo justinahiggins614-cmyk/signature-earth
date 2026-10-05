@@ -91,5 +91,99 @@ document.getElementById('readGuide').onclick=function(){
 };
 document.getElementById('stopGuide').onclick=function(){ JAHaudio.stop(); };
 </script>
+
+<style>
+/* ============ FIRST-visit WELCOME overlay (2026-10-04 standard: centered modal, no scroll, no spotlight) ============ */
+#jahWelcome,#jahGuide,#jahGuideBtn{--amber:#d4a017;--amber2:#d4a0172}
+#jahGuideBtn{position:fixed;top:14px;right:14px;z-index:99900;min-width:48px;min-height:48px;border-radius:24px;border:1px solid var(--amber,#f5a623);background:var(--panel,#161d27);color:var(--amber2,#ffcf6e);font-weight:700;font-size:18px;padding:10px 16px;cursor:pointer}
+#jahGuideBtn:hover{background:var(--amber,#f5a623);color:#0a0e14}
+#jahWelcome{position:fixed;inset:0;z-index:100000;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.75)}
+#jahWelcome.show{display:flex}
+#jahWelcomeCard{background:var(--panel,#161d27);border:2px solid var(--amber,#f5a623);border-radius:14px;padding:22px 20px;max-width:540px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,.6);color:var(--txt,#e8edf4)}
+#jahWelcomeCard h2{margin:0 0 4px;color:var(--amber2,#ffcf6e);font-size:20px}
+#jahWelcomeCard .wsub{margin:4px 0 0;color:var(--dim,#9aa7ba);font-size:14px}
+#jahWelcomeCard ol{margin:10px 0 0;padding-left:22px;font-size:14px;line-height:1.55}
+#jahWelcomeCard ol li{margin:8px 0}
+#jahWelcomeCard ol li b{color:var(--amber2,#ffcf6e)}
+#jahWelcomeCard .wbtnrow{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+#jahGuide .btn,#jahWelcome .btn{min-height:48px;min-width:48px;font-size:15px;padding:12px 22px;border-radius:10px;border:1px solid var(--amber,#f5a623);background:transparent;color:var(--amber2,#ffcf6e);cursor:pointer;font-family:inherit}
+#jahWelcomeOk{font-weight:700;background:var(--amber,#f5a623)!important;color:#0a0e14!important;border:none!important}
+#jahGuide{position:fixed;inset:0;z-index:99900;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.7)}
+#jahGuide.show{display:flex}
+#jahGuideCard{background:var(--panel,#161d27);border:1px solid var(--amber,#f5a623);border-radius:14px;max-width:680px;width:100%;max-height:86vh;overflow:auto;padding:20px 22px;color:var(--txt,#e8edf4)}
+#jahGuideCard h2{margin-top:0;color:var(--amber2,#ffcf6e)}
+#jahGuideCard .gfeat{margin:0 0 14px;padding:10px 12px;background:#10151d;border:1px solid var(--line,#2a3444);border-radius:10px}
+#jahGuideCard .gfeat b{color:var(--amber2,#ffcf6e)}
+#jahGuideCard .gfeat p{margin:4px 0 0;font-size:14px;line-height:1.5;color:var(--txt,#e8edf4)}
+#jahGuideCard .gfeat p b{color:var(--amber2,#ffcf6e)}
+#jahGuideCard .gfeat ul{margin:4px 0;padding-left:20px}
+#jahGuideCloseRow{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+</style>
+<button id="jahGuideBtn" aria-label="Open the site guide" title="How to use this site — every feature, in plain language">?</button>
+<!-- first-visit WELCOME overlay (2026-10-04 standard: centered modal, no scroll, no spotlight) -->
+<div id="jahWelcome" aria-hidden="true">
+  <div id="jahWelcomeCard" role="dialog" aria-modal="true" aria-label="Welcome to Signature Earth">
+    <h2>Welcome to Signature Earth</h2>
+    <p class="wsub">Your own planet explorer &mdash; spin the globe, dive to house level on the map, and let Terra the AI drive. Here&rsquo;s how to use it:</p>
+    <ol>
+      <li><b>Globe or Map.</b> The globe spins the whole planet &mdash; switch to Map mode to zoom all the way down to houses, like the big map sites.</li>
+      <li><b>Search anything.</b> Type a place or a street address &mdash; the map flies there and drops a pin.</li>
+      <li><b>Ask Terra.</b> The AI pal controls the map for you: &ldquo;take me to my childhood house&rdquo;, &ldquo;measure from here to there&rdquo;, &ldquo;full scan this area&rdquo;.</li>
+      <li><b>Scans and Finds.</b> Run treasure-hunter, scientist, or prospector scans over any view &mdash; save discoveries to the Finds tab.</li>
+    </ol>
+    <div class="wbtnrow">
+      <button class="btn" id="jahWelcomeOk" type="button">OK &mdash; Got it &#10003;</button>
+      <button class="btn" id="jahWelcomeFull" type="button">Full how-to guide</button>
+    </div>
+  </div>
+</div>
+<div id="jahGuide" aria-hidden="true">
+  <div id="jahGuideCard" role="dialog" aria-modal="true" aria-label="How to use Signature Earth">
+    <div id="jahGuideCloseRow">
+      <h2 style="margin:0">How to use this site</h2>
+      <button class="btn" id="jahGuideClose" type="button">&#10005; Close</button>
+    </div>
+    <div class="gfeat"><b>&#127758; Globe view</b><p><b>What:</b> the 3D planet. <b>Does:</b> Drag to spin, pinch to zoom &mdash; compass and tilt controls, tap for coordinates, 3D terrain. <b>How:</b> Open the Globe tab and drag.</p></div>
+    <div class="gfeat"><b>&#128506; Map mode</b><p><b>What:</b> the 2D map. <b>Does:</b> Zooms from the whole planet down to house level on real aerial imagery. Where deep imagery isn&rsquo;t available yet, the map says so honestly. <b>How:</b> Tap Map, then pinch or use + / &minus;.</p></div>
+    <div class="gfeat"><b>&#129516; Terra AI</b><p><b>What:</b> the AI pal. <b>Does:</b> Conversational and drives the map: go-to, zoom, measure, layers, scans &mdash; and remembers your conversation. <b>How:</b> Type plain words, e.g. &ldquo;zoom to house level&rdquo; or &ldquo;turn on borders&rdquo;.</p></div>
+    <div class="gfeat"><b>&#128269; AI scans</b><p><b>What:</b> the scan modes. <b>Does:</b> Treasure-hunter finds pattern anomalies, Scientist explains formations, Prospector flags surface indicators &mdash; always labeled as clues, never confirmed deposits. <b>How:</b> Ask Terra for a scan, or run &ldquo;full scan&rdquo; for all three at once.</p></div>
+    <div class="gfeat"><b>&#128205; Finds tab</b><p><b>What:</b> the discoveries catalog. <b>Does:</b> Interesting, unexplained, and valuable finds with map links &mdash; plus your own saved discoveries. <b>How:</b> Open Finds, tap any find to fly to it.</p></div>
+    <div class="gfeat"><b>&#128207; Measure</b><p><b>What:</b> the measure tool. <b>Does:</b> Distance with 2 points, area with 3 or more &mdash; works in globe and map modes. <b>How:</b> Tap Measure, then tap the map.</p></div>
+    <div class="gfeat"><b>&#128203; Places, Tours, Saved</b><p><b>What:</b> the gazetteer tabs. <b>Does:</b> Places A&ndash;Z browses 69,000+ places, Tours are guided flights, Saved keeps your pins. <b>How:</b> The tabs on the main page.</p></div>
+    <div class="btnrow" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">
+      <button class="btn" id="jahGuideTour" type="button">&#9654; Show the welcome guide</button>
+      <button class="btn" id="jahGuideClose2" type="button">&#10005; Close guide</button>
+    </div>
+  </div>
+</div>
+<script>(function(){try{
+/* ---------- first-visit WELCOME overlay (2026-10-04 standard): centered modal.
+   NO auto-scroll, NO spotlight, NO section jumps — the page stays put, the overlay teaches. ---------- */
+var FLAG="jah-tour-seen-earth";
+function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+var w=document.getElementById("jahWelcome"),
+    guide=document.getElementById("jahGuide"),
+    guideCard=document.getElementById("jahGuideCard"),
+    guideBtn=document.getElementById("jahGuideBtn");
+function openWelcome(){if(!w)return;w.classList.add("show");w.setAttribute("aria-hidden","false");
+  try{document.getElementById("jahWelcomeOk").focus({preventScroll:true})}catch(e){}}
+function closeWelcome(){if(!w)return;w.classList.remove("show");w.setAttribute("aria-hidden","true");ls(FLAG,"1")}
+document.getElementById("jahWelcomeOk").onclick=closeWelcome;
+document.getElementById("jahWelcomeFull").onclick=function(){closeWelcome();openGuide()};
+w.addEventListener("click",function(e){if(e.target===w)closeWelcome()});
+document.addEventListener("keydown",function(e){
+  if(w.classList.contains("show")&&e.key==="Escape"){closeWelcome();e.preventDefault()}});
+function openGuide(){if(!guide)return;guide.classList.add("show");guide.setAttribute("aria-hidden","false");
+  try{guideCard.scrollTop=0;document.getElementById("jahGuideClose").focus({preventScroll:true})}catch(e){}}
+function closeGuide(){if(!guide)return;guide.classList.remove("show");guide.setAttribute("aria-hidden","true");
+  try{guideBtn.focus({preventScroll:true})}catch(e){}}
+guideBtn.onclick=openWelcome;
+document.getElementById("jahGuideClose").onclick=closeGuide;
+document.getElementById("jahGuideClose2").onclick=closeGuide;
+document.getElementById("jahGuideTour").onclick=function(){closeGuide();openWelcome()};
+guide.addEventListener("click",function(e){if(e.target===guide)closeGuide()});
+var __qs="",__hash="";try{__qs=location.search;__hash=location.hash}catch(e){}
+if(!ls(FLAG)&&__qs.indexOf("find=")<0&&__hash.indexOf("ll=")<0){setTimeout(openWelcome,900)}
+}catch(e){}})();</script>
 </body>
 </html>
