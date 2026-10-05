@@ -67,15 +67,52 @@ function fallbackTexture() {
   var t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; return t;
 }
 var tex = fallbackTexture();
+var satTex = null, satLoading = false;
+function applyModePills(mode) {
+  var s = document.getElementById('btnModeSig'), t = document.getElementById('btnModeSat');
+  if (s) s.classList.toggle('on', mode === 'sig');
+  if (t) t.classList.toggle('on', mode === 'sat');
+}
+// ---------- globe view mode: Signature (default, Manon's brand) | Satellite ----------
+// Signature stays the default (standing order); satellite is one tap away and
+// persists per profile. Any texture failure falls back to the Signature
+// texture — never a blank globe.
+var globeMode = 'sig';
+try { globeMode = JAHPS.get('sigearth-globemode') === 'sat' ? 'sat' : 'sig'; } catch (e) {}
+function setGlobeMode(mode, opts) {
+  opts = opts || {};
+  globeMode = (mode === 'sat') ? 'sat' : 'sig';
+  try { JAHPS.set('sigearth-globemode', globeMode); } catch (e) {}
+  applyModePills(globeMode);
+  if (globeMode === 'sig') {
+    if (sigTex) { sphere.material.map = sigTex; sphere.material.needsUpdate = true; }
+    return;
+  }
+  if (satTex) { sphere.material.map = satTex; sphere.material.needsUpdate = true; return; }
+  if (satLoading) return;
+  satLoading = true;
+  new THREE.TextureLoader().load('assets/earth-satellite.jpg', function (t) {
+    satLoading = false;
+    t.encoding = THREE.sRGBEncoding;
+    satTex = t;
+    if (globeMode === 'sat' && typeof sphere !== 'undefined' && sphere) { sphere.material.map = t; sphere.material.needsUpdate = true; }
+  }, undefined, function () {
+    satLoading = false;
+    setGlobeMode('sig'); // honest fallback: satellite unavailable, back to Signature
+  });
+}
+var sigTex = null;
 new THREE.TextureLoader().load('assets/earth-texture.png', function (t) {
   t.encoding = THREE.sRGBEncoding;
-  sphere.material.map = t; sphere.material.needsUpdate = true;
+  sigTex = t;
+  if (globeMode === 'sig' && typeof sphere !== 'undefined' && sphere) { sphere.material.map = t; sphere.material.needsUpdate = true; }
 });
 sphere = new THREE.Mesh(
   new THREE.SphereGeometry(1, 128, 96),
   new THREE.MeshPhongMaterial({ map: tex, shininess: 10 })
 );
 globeGroup.add(sphere);
+setGlobeMode(globeMode); // restore saved view mode (Signature default)
 setTerrain(true); // 3D terrain on by default (public elevation data)
 var sun = new THREE.DirectionalLight(0xffffff, 1.15); sun.position.set(5, 2.5, 4); scene.add(sun);
 scene.add(new THREE.AmbientLight(0x8fa3cc, 0.5));
@@ -240,7 +277,12 @@ function ensureIndex() {
     var llp = new URLSearchParams(location.search).get('ll');
     if (llp) {
       var m = llp.match(/(-?[\d.]+),(-?[\d.]+)/);
-      if (m) selectPlace({ id: 'll', n: 'Pinned spot', a: 'Pinned spot', la: +m[1], lo: +m[2], c: '', r: '', p: 0, e: null, t: '' });
+      if (m) {
+        var vmp = new URLSearchParams(location.search).get('view');
+        var rec2 = { id: 'll', n: 'Pinned spot', a: 'Pinned spot', la: +m[1], lo: +m[2], c: '', r: '', p: 0, e: null, t: '' };
+        if (vmp === 'sat') { rec2.fromAddress = true; setGlobeMode('sat'); }
+        selectPlace(rec2);
+      }
     }
     return rows;
   }).catch(function (err) {
@@ -318,7 +360,8 @@ function nominatimSearch(q) {
         selectPlace({
           id: 'addr:' + o.place_id, n: label, a: label,
           la: +o.lat, lo: +o.lon,
-          c: (o.display_name || '').split(',').pop().trim(), r: '', p: 0, e: null, t: ''
+          c: (o.display_name || '').split(',').pop().trim(), r: '', p: 0, e: null, t: '',
+          fromAddress: true // street-address pick: fly + satellite + close-up
         });
       };
       suggest.appendChild(b);
@@ -331,6 +374,7 @@ function nominatimSearch(q) {
 function selectPlace(rec) {
   stopTour();
   addMarker(rec);
+  if (rec.fromAddress) setGlobeMode('sat'); // address pick: satellite view, like the image
   flyTo(rec.la, rec.lo, function () { openCard(rec); });
 }
 
@@ -344,10 +388,19 @@ function openCard(rec) {
   if (rec.e != null) meta += ' · ⛰ ' + rec.e + ' m';
   if (rec.t) meta += '<br>🕓 ' + SE.esc(rec.t);
   document.getElementById('cardMeta').innerHTML = meta;
+  // satellite close-up (house level): address picks + ?view=sat deep links
+  var sv = document.getElementById('satView');
+  var isAddr = !!rec.fromAddress || String(rec.id || '').indexOf('addr:') === 0;
+  if (sv) {
+    if (isAddr && window.SatCloseup) {
+      sv.style.display = 'block';
+      SatCloseup.show(document.getElementById('satMini'), rec.la, rec.lo, rec.n);
+    } else { sv.style.display = 'none'; }
+  }
   card.classList.add('open');
   card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
-document.getElementById('cardClose').onclick = function () { card.classList.remove('open'); JAHaudio.stop(); };
+document.getElementById('cardClose').onclick = function () { card.classList.remove('open'); JAHaudio.stop(); if (window.SatCloseup) SatCloseup.hide(); };
 document.getElementById('cardRead').onclick = function () { if (currentRec) JAHaudio.speak(SE.placeText(currentRec)); };
 document.getElementById('cardCopy').onclick = function () {
   if (currentRec) SE.copyText(SE.placeText(currentRec) + ' See it: ' + location.origin + location.pathname + '?place=' + currentRec.id, document.getElementById('cardCopy'));
@@ -661,6 +714,10 @@ if (compassEl) {
 
 // ---------- toolbar extras ----------
 document.getElementById('btnZoomIn').onclick = function () { targetDist = Math.max(1.7, targetDist * 0.82); idleT = 0; };
+// view-mode pills: Signature (default) | Satellite
+var bms = document.getElementById('btnModeSig'), bmt = document.getElementById('btnModeSat');
+if (bms) bms.onclick = function () { setGlobeMode('sig'); };
+if (bmt) bmt.onclick = function () { setGlobeMode('sat'); JAHaudio.speak('Satellite view. Natural-color imagery, same planet.'); };
 document.getElementById('btnZoomOut').onclick = function () { targetDist = Math.min(6, targetDist * 1.22); idleT = 0; };
 document.getElementById('btnReset').onclick = function () {
   stopTour(); clearMeasure(); clearMarkers(); card.classList.remove('open'); JAHaudio.stop();
@@ -754,6 +811,9 @@ window.EarthControl = {
     clearMeasure();
     addMeasurePoint({ la: a.la, lo: a.lo });
     addMeasurePoint({ la: b.la, lo: b.lo });
+  },
+  setViewMode: function (m) { // 'signature' | 'satellite' — for the AI pal
+    setGlobeMode(m === 'satellite' ? 'sat' : 'sig');
   },
   geocode: function (q) {
     return ensureIndex().then(function (rows) {

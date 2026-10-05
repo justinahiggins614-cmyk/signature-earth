@@ -54,6 +54,7 @@ footer{color:#7286b8;font-size:.78rem;text-align:center;margin:20px 0}
 </style>
 <script src="js/signin.js"></script>
 <script src="js/godmode.js"></script>
+<link rel="stylesheet" href="assets/leaflet/leaflet.css">
 </head>
 <body>
 <div class="wrap">
@@ -80,6 +81,8 @@ footer{color:#7286b8;font-size:.78rem;text-align:center;margin:20px 0}
     <button class="tbtn" id="btnTiltDn" aria-label="Tilt down">⤡ Flat</button>
     <button class="tbtn" id="btnZoomIn" aria-label="Zoom in">＋</button>
     <button class="tbtn" id="btnZoomOut" aria-label="Zoom out">－</button>
+    <button class="tbtn" id="btnModeSig" aria-pressed="true" title="Manon's Signature globe view">✨ Signature</button>
+    <button class="tbtn" id="btnModeSat" aria-pressed="false" title="Natural-color satellite globe view">🛰 Satellite</button>
     <button class="tbtn" id="btnReset">⟳ Reset view</button>
   </div>
 
@@ -97,7 +100,7 @@ footer{color:#7286b8;font-size:.78rem;text-align:center;margin:20px 0}
     <div id="readout">—</div>
     <div id="compass" title="North"><span id="needle">🧭</span></div>
   </div>
-  <p class="hint">Drag to spin · scroll or pinch to zoom · tap the 🧭 compass to reset north · ⤢/⤡ tilt the view · tap a place pin or search to fly there. In 📏 Measure mode, tap points — two for distance, three or more then ✓ Done for area.</p>
+  <p class="hint">Drag to spin · scroll or pinch to zoom · tap the 🧭 compass to reset north · ⤢/⤡ tilt the view · tap a place pin or search to fly there. 🛰 Satellite switches the globe to natural-color satellite imagery — searching a street address flies there in satellite view with a house-level close-up.</p>
 
   <div id="measlabel"></div>
 
@@ -125,6 +128,11 @@ footer{color:#7286b8;font-size:.78rem;text-align:center;margin:20px 0}
       <button class="abtn" id="cardSave">⭐ Save</button>
       <button class="abtn" id="cardClose">✕ Close</button>
     </div>
+    <div id="satView" style="display:none;margin-top:12px">
+      <h3 style="margin:.2em 0 .4em;color:var(--gold);font-size:1rem">🛰 Satellite view — house level</h3>
+      <div id="satMini" style="height:240px;border-radius:10px;overflow:hidden;border:1px solid #2a3a66"></div>
+      <p style="color:#8fa0c8;font-size:.78rem;margin:6px 0 0">Close-up: Sentinel-2 (EOX/Copernicus) to zoom 14 · USDA NAIP aerial to zoom 19 (US only — honest tile where deep imagery isn&rsquo;t available). The globe above is natural-color NASA Blue Marble satellite imagery.</p>
+    </div>
   </div>
 
   <div class="jahnet"><span class="jahnet-t">THE JAH NETWORK</span><a href="https://justinahiggins614-cmyk.github.io/signature-math/">1 Signature Math</a><a href="https://justinahiggins614-cmyk.github.io/jah-calculator/">2 Signature Universal Paradox Immune Calculator</a><a href="https://justinahiggins614-cmyk.github.io/jah-dictionary/">3 The Signature Dictionary</a><a href="https://justinahiggins614-cmyk.github.io/jah-wiki/">4 JAH Wiki</a><a href="https://justinahiggins614-cmyk.github.io/jah-n-wiki-leaks/">5 JAH-N Wiki Leaks</a><a href="https://justinahiggins614-cmyk.github.io/signature-llama/">6 Signature Llama: The Fully Cyber Utilizable AI</a><a href="https://justinahiggins614-cmyk.github.io/jah-ai-models/">7 The Signature AI Phone Book</a><a href="https://justinahiggins614-cmyk.github.io/cyber-patent-catalog/">8 Globally Rejustered Patent Catalog</a><a href="https://justinahiggins614-cmyk.github.io/signature-one-archive/specs.html">9 Signature Spec Catalog Pending Patents</a><a href="https://justinahiggins614-cmyk.github.io/jah-computer-systems/">10 The Signature PC System Depository</a><a href="https://justinahiggins614-cmyk.github.io/signature-books/">11 The Signature Book Depository</a><a href="https://justinahiggins614-cmyk.github.io/signature-comics/">12 The Signature Comic Store</a><a href="https://justinahiggins614-cmyk.github.io/signature-newspapers/">13 The Signature Global Newspaper Archive</a><a href="https://justinahiggins614-cmyk.github.io/signature-backend/">14 The Signature AI Mix and Match Generator</a><a href="https://justinahiggins614-cmyk.github.io/signature-boundless-generators/">15 The Signature Boundless Generator Archive</a><a href="https://justinahiggins614-cmyk.github.io/signature-ai-mixlab/">16 The Signature AI Mix Lab</a><a href="https://justinahiggins614-cmyk.github.io/signature-ai-olypics/">17 AI Olympics</a><a href="https://justinahiggins614-cmyk.github.io/signature-chip-maker/">18 The Signature Computer Chip Maker and Archive</a><a href="https://justinahiggins614-cmyk.github.io/signature-app-archive/">19 The Signature App Archive</a><a href="https://justinahiggins614-cmyk.github.io/signature-ai-robot-matcher/">20 The Signature AI Robot Matcher</a><a href="https://justinahiggins614-cmyk.github.io/signature-experiment-solver/">21 The Signature Experiment Solver</a><a href="https://justinahiggins614-cmyk.github.io/signature-ai-image-video-maker/">22 Signature AI Pixel</a><a href="https://justinahiggins614-cmyk.github.io/signature-ai-song-maker/">23 Signature Music Studio</a><a href="https://justinahiggins614-cmyk.github.io/signature-fixit/">24 The Signature Mr Fix-It</a><a href="https://justinahiggins614-cmyk.github.io/signature-university/">25 The Signature University</a><a href="https://justinahiggins614-cmyk.github.io/signature-cyber-mega-mall/">26 The Signature Cyber Mega-Mall</a><a href="https://justinahiggins614-cmyk.github.io/signature-3d-print/">27 The Signature 3D Print Mega Mall</a><a href="https://justinahiggins614-cmyk.github.io/signature-flight-school/">29 The Signature Flight School</a><a href="https://justinahiggins614-cmyk.github.io/signature-game-store/">30 The Signature Game Store</a><a href="https://justinahiggins614-cmyk.github.io/signature-website-creator/">31 The Signature Website Creator</a><br><span class="here">28 Signature Earth — YOU ARE HERE</span></div>
@@ -147,10 +155,12 @@ footer{color:#7286b8;font-size:.78rem;text-align:center;margin:20px 0}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.149.0/three.min.js"></script>
+<script src="assets/leaflet/leaflet.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/site.js"></script>
 <script src="js/jahtalk.js"></script>
 <script src="js/finds-data.js"></script>
+<script src="js/satcloseup.js"></script>
 <script src="js/globe.js"></script>
 <script src="js/earth-ai.js"></script>
 

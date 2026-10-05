@@ -20,6 +20,25 @@ coastline, and ocean is exactly where the satellites saw it ("exactly same").
 Output: `assets/earth-texture.png` (2048×1024 RGB PNG), loaded by
 `js/globe.js` via `THREE.TextureLoader` (replaces the canvas fallback).
 
+## The Satellite texture (2026-10-05, "Satellite" globe mode)
+`code/make_satellite_texture.py` (deterministic, reproducible — re-run it any
+time): resizes the SAME Blue Marble NG source to 4096×2048 equirectangular
+(LANCZOS) with NO binary grain, NO bit veil, NO color grade — natural-color
+satellite imagery, exactly as the satellites saw it.
+
+Output: `assets/earth-satellite.jpg` (4096×2048 RGB JPEG, progressive,
+quality 85, ~1.1MB). Loaded ON DEMAND by `js/globe.js` when the user taps
+the 🛰 Satellite pill (Signature stays the default; choice persists in
+localStorage). If the JPG fails to load, the globe falls back to the
+Signature texture — never a blank globe.
+
+Why a globe texture can't show houses: 4096px across the whole planet is
+~10km/px. The house-level "like the image" experience comes from the
+Satellite-view close-up card (js/satcloseup.js): a live 2D mini-map on the
+same page reusing the map.html tile stack — EOX Sentinel-2 z3–14,
+USGS NAIP WMS z15–19 (public domain, US only) with the honest
+`assets/no-aerial.png` tile elsewhere.
+
 ## What this is NOT
 - No Google Earth / Google Maps tiles, ever (proprietary — never scraped).
 - The old `code/build_texture.py` generated a stylized cartoon texture from
