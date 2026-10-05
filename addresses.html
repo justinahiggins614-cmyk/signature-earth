@@ -2,51 +2,46 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Globe — Signature Earth</title>
-<meta name="description" content="The interactive Signature Earth globe: spin, zoom, tilt, search 69,763 real places + street addresses, measure distance and area, layers, 3D terrain, tours.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Addresses A–Z — Signature Earth</title>
+<meta name="description" content="The Signature Earth address archive: every real geocoded address, marching to 1,000,000.">
 <style>
 :root{--gold:#d4a017}
 *{box-sizing:border-box}
-body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#eef;background:#060a16;min-height:100vh}
-.wrap{max-width:1060px;margin:0 auto;padding:14px 12px 40px}
-.kicker{letter-spacing:.25em;font-size:.72rem;color:var(--gold);margin:10px 0 4px}
-h1{font-size:1.6rem;margin:.1em 0}
-.tabs{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#eef;background:radial-gradient(1200px 800px at 70% -10%,#16244d 0%,#0b1020 55%,#060a16 100%);min-height:100vh}
+.wrap{max-width:1060px;margin:0 auto;padding:18px 16px 60px}
+.kicker{letter-spacing:.25em;font-size:.72rem;color:var(--gold);margin:14px 0 4px}
+h1{font-size:1.8rem;margin:.1em 0}
+.tabs{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
 .tabs a{flex:1 1 120px;text-align:center;text-decoration:none;color:#eef;background:#141d38;border:2px solid #2a3a66;border-radius:999px;padding:11px 8px;font-weight:700}
 .tabs a.active{background:var(--gold);color:#101010;border-color:var(--gold)}
-.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
-.searchwrap{position:relative;flex:1 1 220px}
-#search{width:100%;padding:12px 14px;border-radius:999px;border:2px solid #2a3a66;background:#101a33;color:#eef;font-size:1rem}
-#suggest{position:absolute;top:110%;left:0;right:0;background:#101a33;border:1px solid #2a3a66;border-radius:12px;max-height:260px;overflow:auto;z-index:30;display:none}
-#suggest button{display:block;width:100%;text-align:left;background:none;border:0;color:#eef;padding:10px 12px;cursor:pointer;font-size:.95rem}
-#suggest button:hover,#suggest button:focus{background:#1c2a55}
-.tbtn{background:#141d38;color:#eef;border:2px solid #2a3a66;border-radius:999px;padding:10px 14px;font-weight:700;cursor:pointer;font-size:.95rem}
-.tbtn.on{background:var(--gold);color:#101010;border-color:var(--gold)}
-.tbtn:hover{border-color:var(--gold)}
-#stage{position:relative;border:1px solid #2a3a66;border-radius:14px;overflow:hidden;background:#02040a}
-#globe{width:100%;height:min(66vh,560px);display:block;touch-action:none;cursor:grab}
-#globe:active{cursor:grabbing}
-#readout{position:absolute;left:10px;bottom:8px;color:#9fb3e8;font-size:.8rem;background:rgba(6,10,22,.65);padding:4px 10px;border-radius:999px;pointer-events:none}
-#compass{position:absolute;right:10px;top:10px;width:46px;height:46px;background:rgba(6,10,22,.65);border:1px solid #2a3a66;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.3rem;pointer-events:none}
-#compass span{display:inline-block;transition:transform .2s}
-#loadmsg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#9fb3e8;font-size:1rem;background:#060a16;z-index:5;text-align:center;padding:20px}
-.drawer{display:none;background:#101a33;border:1px solid #2a3a66;border-radius:14px;padding:14px;margin:10px 0;max-height:300px;overflow:auto}
-.drawer.open{display:block}
-.drawer h3{margin:.2em 0;color:var(--gold)}
-.drawer button.row{display:block;width:100%;text-align:left;background:#16224a;border:1px solid #2a3a66;color:#eef;border-radius:10px;padding:10px;margin:6px 0;cursor:pointer}
-.drawer button.row:hover{border-color:var(--gold)}
-.drawer .x{float:right;background:none;border:0;color:#9fb3e8;font-size:1.1rem;cursor:pointer}
-#card{display:none;background:#101a33;border:1px solid var(--gold);border-radius:14px;padding:16px;margin:10px 0}
-#card.open{display:block}
-#card h2{margin:.1em 0;color:#fff}
-#card .meta{color:#9fb3e8;font-size:.92rem;line-height:1.6}
-#card .acts{margin-top:10px;display:flex;flex-wrap:wrap;gap:8px}
+.card{background:#101a33;border:1px solid #2a3a66;border-radius:14px;padding:18px;margin:14px 0}
+.status{color:#9fb3e8;font-size:.95rem}
+#potd{display:none;border:1px solid var(--gold)}
+#potd h3{color:var(--gold);margin:.2em 0}
+.potd-name{font-size:1.3rem;margin:.3em 0}
+.potd-name a{color:#fff;text-decoration:none}
+.potd-name a:hover{text-decoration:underline}
+.meta{color:#9fb3e8;line-height:1.6}
+.acts{margin-top:10px;display:flex;flex-wrap:wrap;gap:8px}
 .abtn{background:#1a2547;color:#eef;border:2px solid #2a3a66;border-radius:999px;padding:9px 14px;font-weight:700;cursor:pointer;font-size:.9rem}
 .abtn:hover{border-color:var(--gold)}
-#measlabel{display:none;background:#3a2c07;border:1px solid var(--gold);border-radius:10px;padding:8px 12px;margin:10px 0;color:#ffe9a8;font-weight:700}
-.hint{color:#8fa0c8;font-size:.85rem;margin:8px 0}
-.jahnet{margin:26px 0 10px;padding:14px;border:1px solid #2a3a66;border-radius:14px;background:#0d1530;font-size:.82rem;line-height:2.1}
+.tbtn{background:#141d38;color:#eef;border:2px solid #2a3a66;border-radius:999px;padding:10px 16px;font-weight:700;cursor:pointer;font-size:.95rem;margin:8px 0}
+.tbtn:hover{border-color:var(--gold)}
+.searchwrap{position:relative;margin:10px 0}
+#pssearch,#psearch{width:100%;padding:12px 14px;border-radius:999px;border:2px solid #2a3a66;background:#0d1530;color:#eef;font-size:1rem}
+#psuggest,#asuggest{position:absolute;top:110%;left:0;right:0;background:#101a33;border:1px solid #2a3a66;border-radius:12px;max-height:260px;overflow:auto;z-index:30;display:none}
+#psuggest button,#asuggest button{display:block;width:100%;text-align:left;background:none;border:0;color:#eef;padding:10px 12px;cursor:pointer;font-size:.95rem}
+#letters{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px;margin:12px 0}
+.lbtn{background:#141d38;border:2px solid #2a3a66;border-radius:12px;color:#eef;padding:10px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
+.lbtn b{font-size:1.2rem;color:var(--gold)}
+.lbtn span{font-size:.72rem;color:#9fb3e8}
+.lbtn:hover{border-color:var(--gold)}
+#listTitle{color:var(--gold);margin:14px 0 6px}
+.prow{display:flex;justify-content:space-between;gap:10px;align-items:baseline;background:#0d1530;border:1px solid #22305c;border-radius:10px;padding:10px 12px;margin:6px 0;color:#eef;text-decoration:none}
+.prow:hover{border-color:var(--gold)}
+.prow span{color:#9fb3e8;font-size:.85rem;text-align:right}
+.jahnet{margin:30px 0 10px;padding:14px;border:1px solid #2a3a66;border-radius:14px;background:#0d1530;font-size:.82rem;line-height:2.1}
 .jahnet-t{color:var(--gold);font-weight:800;letter-spacing:.2em;margin-right:10px}
 .jahnet a{color:#9fb3e8;text-decoration:none;margin:0 8px 0 0;white-space:nowrap}
 .jahnet .here{display:inline-block;background:#3a1414;color:#ffb3b3;border:1px solid #a33;border-radius:999px;padding:2px 12px;font-weight:800;margin:4px 0}
@@ -54,116 +49,51 @@ footer{color:#7286b8;font-size:.78rem;text-align:center;margin:20px 0}
 </style>
 <script src="js/signin.js"></script>
 <script src="js/godmode.js"></script>
-<link rel="stylesheet" href="assets/leaflet/leaflet.css">
 </head>
 <body>
 <div class="wrap">
   <p class="kicker">SITE 28 OF 31 · THE JAH NETWORK</p>
-  <h1>🌍 The Globe</h1>
+  <h1>📬 Addresses A–Z</h1>
   <nav class="tabs" aria-label="Site sections">
     <a href="index.html">🏠 Main</a>
-    <a href="globe.html" class="active">🌍 Globe</a>
+    <a href="globe.html">🌍 Globe</a>
     <a href="map.html">🗺 Map</a>
     <a href="places.html">🗂 Places A–Z</a>
     <a href="finds.html">💎 Finds</a>
-    <a href="addresses.html">📬 Addresses</a>
+    <a href="addresses.html" class="active">📬 Addresses</a>
   </nav>
 
-  <div class="toolbar">
+  <div class="card">
+    <p class="status">● <span id="statline">Loading place count…</span></p>
     <div class="searchwrap">
-      <input id="search" type="search" placeholder="🔎 Search places or street addresses…" aria-label="Search places or addresses" autocomplete="off">
-      <div id="suggest" role="listbox"></div>
-    </div>
-    <button class="tbtn" id="btnMeasure" aria-pressed="false">📏 Measure</button>
-    <button class="tbtn" id="btnLayers" aria-pressed="false">🗺 Layers</button>
-    <button class="tbtn" id="btnTours">🧭 Tours</button>
-    <button class="tbtn" id="btnSaved">⭐ Saved</button>
-    <button class="tbtn" id="btnTiltUp" aria-label="Tilt up">⤢ Tilt</button>
-    <button class="tbtn" id="btnTiltDn" aria-label="Tilt down">⤡ Flat</button>
-    <button class="tbtn" id="btnZoomIn" aria-label="Zoom in">＋</button>
-    <button class="tbtn" id="btnZoomOut" aria-label="Zoom out">－</button>
-    <button class="tbtn" id="btnModeSig" aria-pressed="true" title="Manon's Signature globe view">✨ Signature</button>
-    <button class="tbtn" id="btnModeSat" aria-pressed="false" title="Natural-color satellite globe view">🛰 Satellite</button>
-    <button class="tbtn" id="btnReset">⟳ Reset view</button>
-  </div>
-
-  <div id="layersPanel" aria-label="Globe layers" style="display:none;background:#101a33;border:1px solid #2a3a66;border-radius:14px;padding:12px 16px;margin:10px 0">
-    <h3 style="margin:.2em 0 .4em;color:var(--gold);font-size:1rem">🗺 Layers</h3>
-    <label style="display:block;color:#eef;padding:7px 0;cursor:pointer"><input type="checkbox" id="lyBorders" style="margin-right:9px;transform:scale(1.25)"> Country borders <span style="color:#8fa0c8">(Natural Earth, public domain)</span></label>
-    <label style="display:block;color:#eef;padding:7px 0;cursor:pointer"><input type="checkbox" id="lyLabels" style="margin-right:9px;transform:scale(1.25)"> Country labels</label>
-    <label style="display:block;color:#eef;padding:7px 0;cursor:pointer"><input type="checkbox" id="lyTerrain" checked style="margin-right:9px;transform:scale(1.25)"> 3D terrain <span style="color:#8fa0c8">(exaggerated, public elevation data)</span></label>
-  </div>
-  <style>#layersPanel.open{display:block!important}</style>
-
-  <div id="stage">
-    <canvas id="globe"></canvas>
-    <div id="loadmsg">🌍 Waking up the planet…<br><small>loading the 3D engine and place data</small></div>
-    <div id="readout">—</div>
-    <div id="compass" title="North"><span id="needle">🧭</span></div>
-  </div>
-  <p class="hint">Drag to spin · scroll or pinch to zoom · tap the 🧭 compass to reset north · ⤢/⤡ tilt the view · tap a place pin or search to fly there. 🛰 Satellite switches the globe to natural-color satellite imagery — searching a street address flies there in satellite view with a house-level close-up.</p>
-
-  <div id="measlabel"></div>
-
-  <div class="drawer" id="toursDrawer">
-    <button class="x" data-close="toursDrawer" aria-label="Close">✕</button>
-    <h3>🧭 Guided tours</h3>
-    <p style="color:#9fb3e8;font-size:.9rem">Pick a tour — the globe flies you stop to stop, and reads each place aloud.</p>
-    <div id="tourList"></div>
-    <button class="tbtn" id="btnStopTour" style="display:none">⏹ Stop tour</button>
-  </div>
-
-  <div class="drawer" id="savedDrawer">
-    <button class="x" data-close="savedDrawer" aria-label="Close">✕</button>
-    <h3>⭐ Your saved places</h3>
-    <div id="savedList"><p style="color:#9fb3e8">Nothing saved yet — open any place and tap ⭐ Save.</p></div>
-  </div>
-
-  <div id="card" aria-live="polite">
-    <h2 id="cardName"></h2>
-    <div class="meta" id="cardMeta"></div>
-    <div class="acts">
-      <button class="abtn" id="cardRead">🔊 Read aloud</button>
-      <button class="abtn" id="cardCopy">📋 Copy</button>
-      <button class="abtn" id="cardDl">⬇ Download</button>
-      <button class="abtn" id="cardSave">⭐ Save</button>
-      <button class="abtn" id="cardClose">✕ Close</button>
-    </div>
-    <div id="satView" style="display:none;margin-top:12px">
-      <h3 style="margin:.2em 0 .4em;color:var(--gold);font-size:1rem">🛰 Satellite view — house level</h3>
-      <div id="satMini" style="height:240px;border-radius:10px;overflow:hidden;border:1px solid #2a3a66"></div>
-      <p style="color:#8fa0c8;font-size:.78rem;margin:6px 0 0">Close-up: Sentinel-2 (EOX/Copernicus) to zoom 14 · USDA NAIP aerial to zoom 19 (US only — honest tile where deep imagery isn&rsquo;t available). The globe above is natural-color NASA Blue Marble satellite imagery.</p>
+      <input id="asearch" type="search" placeholder="🔎 Search the address archive…" aria-label="Search addresses" autocomplete="off">
+      <div id="asuggest"></div>
     </div>
   </div>
+
+  <div class="card">
+    <h2 style="color:var(--gold);margin:.2em 0">🤖 Ask the AI about the archive</h2>
+    <p class="status">Find, solve, answer — searches every archived address.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><input id="askInput" type="text" placeholder="e.g. bakeries on Main Street in Ohio…" aria-label="Ask about the archive" style="flex:1 1 220px;padding:11px 14px;border-radius:999px;border:2px solid #2a3a66;background:#0d1530;color:#eef;font-size:.95rem"><button class="tbtn" id="askBtn" style="margin:0">Ask</button></div>
+    <div id="askOut" style="display:none;margin-top:10px" aria-live="polite"></div>
+  </div>
+
+  <div class="card" id="potd"></div>
+
+  <div class="card">
+    <h2 style="color:var(--gold);margin:.2em 0">Browse addresses by letter</h2>
+    <div id="letters"><p style="color:#9fb3e8">Loading letters…</p></div>
+  </div>
+
+  <h2 id="listTitle"></h2>
+  <div id="list"></div>
 
   <div class="jahnet"><span class="jahnet-t">THE JAH NETWORK</span><a href="https://justinahiggins614-cmyk.github.io/signature-math/">1 Signature Math</a><a href="https://justinahiggins614-cmyk.github.io/jah-calculator/">2 Signature Universal Paradox Immune Calculator</a><a href="https://justinahiggins614-cmyk.github.io/jah-dictionary/">3 The Signature Dictionary</a><a href="https://justinahiggins614-cmyk.github.io/jah-wiki/">4 JAH Wiki</a><a href="https://justinahiggins614-cmyk.github.io/jah-n-wiki-leaks/">5 JAH-N Wiki Leaks</a><a href="https://justinahiggins614-cmyk.github.io/signature-llama/">6 Signature Llama: The Fully Cyber Utilizable AI</a><a href="https://justinahiggins614-cmyk.github.io/jah-ai-models/">7 The Signature AI Phone Book</a><a href="https://justinahiggins614-cmyk.github.io/cyber-patent-catalog/">8 Globally Rejustered Patent Catalog</a><a href="https://justinahiggins614-cmyk.github.io/signature-one-archive/specs.html">9 Signature Spec Catalog Pending Patents</a><a href="https://justinahiggins614-cmyk.github.io/jah-computer-systems/">10 The Signature PC System Depository</a><a href="https://justinahiggins614-cmyk.github.io/signature-books/">11 The Signature Book Depository</a><a href="https://justinahiggins614-cmyk.github.io/signature-comics/">12 The Signature Comic Store</a><a href="https://justinahiggins614-cmyk.github.io/signature-newspapers/">13 The Signature Global Newspaper Archive</a><a href="https://justinahiggins614-cmyk.github.io/signature-backend/">14 The Signature AI Mix and Match Generator</a><a href="https://justinahiggins614-cmyk.github.io/signature-boundless-generators/">15 The Signature Boundless Generator Archive</a><a href="https://justinahiggins614-cmyk.github.io/signature-ai-mixlab/">16 The Signature AI Mix Lab</a><a href="https://justinahiggins614-cmyk.github.io/signature-ai-olypics/">17 AI Olympics</a><a href="https://justinahiggins614-cmyk.github.io/signature-chip-maker/">18 The Signature Computer Chip Maker and Archive</a><a href="https://justinahiggins614-cmyk.github.io/signature-app-archive/">19 The Signature App Archive</a><a href="https://justinahiggins614-cmyk.github.io/signature-ai-robot-matcher/">20 The Signature AI Robot Matcher</a><a href="https://justinahiggins614-cmyk.github.io/signature-experiment-solver/">21 The Signature Experiment Solver</a><a href="https://justinahiggins614-cmyk.github.io/signature-ai-image-video-maker/">22 Signature AI Pixel</a><a href="https://justinahiggins614-cmyk.github.io/signature-ai-song-maker/">23 Signature Music Studio</a><a href="https://justinahiggins614-cmyk.github.io/signature-fixit/">24 The Signature Mr Fix-It</a><a href="https://justinahiggins614-cmyk.github.io/signature-university/">25 The Signature University</a><a href="https://justinahiggins614-cmyk.github.io/signature-cyber-mega-mall/">26 The Signature Cyber Mega-Mall</a><a href="https://justinahiggins614-cmyk.github.io/signature-3d-print/">27 The Signature 3D Print Mega Mall</a><a href="https://justinahiggins614-cmyk.github.io/signature-flight-school/">29 The Signature Flight School</a><a href="https://justinahiggins614-cmyk.github.io/signature-game-store/">30 The Signature Game Store</a><a href="https://justinahiggins614-cmyk.github.io/signature-website-creator/">31 The Signature Website Creator</a><br><span class="here">28 Signature Earth — YOU ARE HERE</span></div>
-  <footer>Signature Earth · place data © GeoNames (CC-BY 4.0) · borders © Natural Earth (public domain) · elevation: SRTM/ETOPO via Mapzen Terrarium (public domain) · addresses: © OpenStreetMap contributors (ODbL)</footer>
+  <footer>Signature Earth · place data © GeoNames (CC-BY 4.0) · addresses © OpenStreetMap contributors (ODbL) via Nominatim — every address a real geocoded record, never generated</footer>
 </div>
-
-<button id="aiFab" aria-label="Ask the Earth AI" style="position:fixed;right:16px;bottom:16px;z-index:2000;background:var(--gold);color:#101010;border:0;border-radius:999px;padding:14px 20px;font-weight:800;font-size:1rem;cursor:pointer;box-shadow:0 4px 18px rgba(0,0,0,.5)">🤖 Earth AI</button>
-<div id="aiPanel" role="dialog" aria-label="Earth AI chat" style="position:fixed;right:12px;bottom:76px;z-index:2000;width:min(380px,calc(100vw - 24px));max-height:min(560px,72vh);display:none;flex-direction:column;background:#0d1530;border:2px solid var(--gold);border-radius:16px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.6)">
-  <div id="aiHead" style="background:#141d38;padding:12px 14px;color:#fff;font-weight:800;display:flex;justify-content:space-between;align-items:center"><span>🤖 Terra — your Earth AI</span><button id="aiClose" aria-label="Close" style="background:none;border:0;color:#9fb3e8;font-size:1.2rem;cursor:pointer">✕</button></div>
-  <div id="aiLog" aria-live="polite" style="flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:8px;min-height:120px"></div>
-  <div id="aiHint" style="padding:0 12px 10px;color:#8fa0c8;font-size:.78rem">Try: “take me to Paris” · “turn on borders” · “measure Paris to Tokyo”</div>
-  <form id="aiForm" style="display:flex;gap:8px;padding:10px;border-top:1px solid #2a3a66"><input id="aiInput" type="text" placeholder="Ask Terra anything…" aria-label="Ask Terra" autocomplete="off" style="flex:1;padding:11px 13px;border-radius:999px;border:2px solid #2a3a66;background:#101a33;color:#eef;font-size:.95rem"><button id="aiSend" type="submit" style="background:var(--gold);color:#101010;border:0;border-radius:999px;padding:11px 18px;font-weight:800;cursor:pointer">Send</button></form>
-</div>
-<style>
-#aiPanel.open{display:flex!important}
-#aiLog .msg{max-width:88%;padding:9px 12px;border-radius:14px;font-size:.93rem;line-height:1.45}
-#aiLog .msg.ai{background:#1a2547;color:#eef;align-self:flex-start;border-bottom-left-radius:4px}
-#aiLog .msg.me{background:var(--gold);color:#101010;align-self:flex-end;border-bottom-right-radius:4px;font-weight:600}
-#aiLog .msg .abtn{margin-top:8px}
-</style>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.149.0/three.min.js"></script>
-<script src="assets/leaflet/leaflet.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/site.js"></script>
-<script src="js/jahtalk.js"></script>
-<script src="js/finds-data.js"></script>
-<script src="js/satcloseup.js"></script>
-<script src="js/globe.js"></script>
-<script src="js/earth-ai.js"></script>
+<script src="js/addresses.js"></script>
 
 <style>
 /* ============ FIRST-visit WELCOME overlay (2026-10-04 standard: centered modal, no scroll, no spotlight) ============ */
