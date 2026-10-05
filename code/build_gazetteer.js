@@ -1,6 +1,6 @@
 // Build the Signature Earth gazetteer from GeoNames open data (CC-BY 4.0).
 // Input:  data/cities5000.txt, data/countryInfo.txt, data/admin1CodesASCII.txt
-// Output: data/places/<L>.json.gz (per-letter chunks, pop-desc)
+// Output: data/places/<L>.json.gz (per-letter chunks, pop-desc; '#' ships as hash.json.gz — Pages won't serve '#' in a filename)
 //         data/index/names.json.gz (compact search index, pop-desc)
 //         data/index/stats.json
 // Real records only — never invent coordinates.
@@ -75,7 +75,7 @@ const stats = { total: recs.length, letters: {}, source: 'GeoNames cities5000 + 
 for (const L of Object.keys(buckets).sort()) {
   const arr = buckets[L];
   stats.letters[L] = arr.length;
-  fs.writeFileSync(path.join(placesDir, L + '.json.gz'), zlib.gzipSync(JSON.stringify(arr)));
+  fs.writeFileSync(path.join(placesDir, (L === '#' ? 'hash' : L) + '.json.gz'), zlib.gzipSync(JSON.stringify(arr)));
 }
 // compact search index: [asciiName, lat, lon, country, region, pop, id]
 const sidx = recs.map(r => [r.a, r.la, r.lo, r.c, r.r, r.p, r.id]);

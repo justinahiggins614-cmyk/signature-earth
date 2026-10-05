@@ -58,7 +58,7 @@ function openLetter(L) {
   curLetter = L; shown = 0; curRows = [];
   listTitle.textContent = 'Loading ' + L + '…';
   listEl.innerHTML = '';
-  SE.fetchGz('data/places/' + L + '.json.gz').then(function (rows) {
+  SE.fetchGz('data/places/' + (L === '#' ? 'hash' : L) + '.json.gz').then(function (rows) {
     curRows = rows;
     listTitle.textContent = '“' + L + '” — ' + rows.length.toLocaleString('en-US') + ' places';
     renderMore();
