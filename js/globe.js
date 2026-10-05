@@ -10,6 +10,12 @@ if (!window.THREE) {
 }
 if (loadmsg) loadmsg.style.display = 'none';
 
+// ---------- profile-aware storage ----------
+// JAHProfile storage wrapper (JAHPS): public visitors pass keys through
+// unprefixed (behavior unchanged); signed-in profiles get per-profile
+// namespaced storage. Mirrors the page-level adapter in globe.html/index.html.
+var JAHPS = (function () { try { return (typeof JAHProfile !== "undefined") && JAHProfile.store ? JAHProfile.store : localStorage; } catch (e) { return localStorage; } })();
+
 // ---------- math ----------
 var D2R = Math.PI / 180, R2D = 180 / Math.PI;
 function latLonToVec3(la, lo) {
@@ -354,7 +360,7 @@ document.getElementById('cardSave').onclick = function () {
   var saved = loadSaved();
   if (!saved.some(function (s) { return s.id === currentRec.id; })) {
     saved.unshift({ id: currentRec.id, n: currentRec.n, la: currentRec.la, lo: currentRec.lo, c: currentRec.c });
-    try { localStorage.setItem('sigearth-saved', JSON.stringify(saved.slice(0, 60))); } catch (e) {}
+    try { JAHPS.set('sigearth-saved', JSON.stringify(saved.slice(0, 60))); } catch (e) {}
     renderSaved();
   }
   var b = document.getElementById('cardSave'), old = b.textContent;
@@ -508,7 +514,7 @@ document.querySelectorAll('[data-close]').forEach(function (x) {
 
 // ---------- saved ----------
 function loadSaved() {
-  try { return JSON.parse(localStorage.getItem('sigearth-saved') || '[]'); } catch (e) { return []; }
+  try { return JSON.parse(JAHPS.get('sigearth-saved') || '[]'); } catch (e) { return []; }
 }
 function renderSaved() {
   var saved = loadSaved(), list = document.getElementById('savedList');
@@ -524,7 +530,7 @@ function renderSaved() {
     var x = document.createElement('button');
     x.className = 'abtn'; x.textContent = '✕'; x.setAttribute('aria-label', 'Remove ' + s.n);
     x.onclick = function () {
-      try { localStorage.setItem('sigearth-saved', JSON.stringify(loadSaved().filter(function (o) { return o.id !== s.id; }))); } catch (e) {}
+      try { JAHPS.set('sigearth-saved', JSON.stringify(loadSaved().filter(function (o) { return o.id !== s.id; }))); } catch (e) {}
       renderSaved();
     };
     row.appendChild(b); row.appendChild(x); list.appendChild(row);
