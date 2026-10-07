@@ -1,3 +1,5 @@
+
+function jahToast(m){var t=document.getElementById('jah-toast');if(!t){t=document.createElement('div');t.id='jah-toast';document.body.appendChild(t)}t.textContent=String(m);t.style.display='block';clearTimeout(t._x);t._x=setTimeout(function(){t.style.display='none'},3000)}
 // Signature Earth — interactive 3D globe (Three.js).
 // Drag to spin, scroll/pinch to zoom, search to fly, measure, tours, saved places.
 (function () {
@@ -608,7 +610,7 @@ function startTour(t) {
   ensureIndex().then(function () {
     var stops = [];
     t.stops.forEach(function (s) { var r = findPlace(s[0], s[1]); if (r) stops.push(r); });
-    if (!stops.length) { alert('Tour places are still loading — try again in a moment.'); return; }
+    if (!stops.length) { jahToast('Tour places are still loading — try again in a moment.'); return; }
     stopTour(); tourActive = true; btnStopTour.style.display = 'inline-block';
     document.getElementById('toursDrawer').classList.remove('open');
     var i = 0;
@@ -624,7 +626,7 @@ function startTour(t) {
         tourTimer = setTimeout(next, 6000);
       });
     })();
-  }).catch(function () { alert('Place data is still loading — try again in a moment.'); });
+  }).catch(function () { jahToast('Place data is still loading — try again in a moment.'); });
 }
 
 // ---------- drawers ----------
