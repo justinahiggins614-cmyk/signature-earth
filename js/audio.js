@@ -7,6 +7,7 @@ window.JAHaudio = (function () {
   }
   function stop() {
     try { if (supported()) window.speechSynthesis.cancel(); } catch (e) {}
+    try { if (window.__jahAudioEl) { window.__jahAudioEl.pause(); window.__jahAudioEl = null; } } catch (e) {}
   }
   function pickVoice() {
     try {
@@ -18,7 +19,21 @@ window.JAHaudio = (function () {
     } catch (e) {}
     return null;
   }
-  function speak(text) {
+  function speakGTTS(text, onFail) {
+    // Tier 1: Google TTS via audio element (works in Facebook in-app browser, no key).
+    try {
+      stop();
+      var a = new Audio();
+      var chunk = String(text).slice(0, 200);
+      a.src = 'https://translate.google.com/translate_tts?ie=UTF-8&q=' + encodeURIComponent(chunk) + '&tl=en&client=tw-ob';
+      a.onerror = function () { if (onFail) onFail(); };
+      window.__jahAudioEl = a;
+      var pr = a.play();
+      if (pr && pr.catch) pr.catch(function () { if (onFail) onFail(); });
+      return true;
+    } catch (e) { if (onFail) onFail(); return false; }
+  }
+  function speakSS(text) {
     stop();
     if (!text || !supported()) return false;
     try {
@@ -29,6 +44,12 @@ window.JAHaudio = (function () {
       window.speechSynthesis.speak(u);
       return true;
     } catch (e) { return false; }
+  }
+  function speak(text) {
+    // Tiered: Google TTS audio first, speechSynthesis fallback.
+    if (!text) return false;
+    try { if (window.__jahAudioEl) { window.__jahAudioEl.pause(); window.__jahAudioEl = null; } } catch (e) {}
+    return speakGTTS(text, function () { speakSS(text); });
   }
   // warm up voices on some browsers
   try { if (supported()) window.speechSynthesis.getVoices(); } catch (e) {}
