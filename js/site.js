@@ -1,5 +1,5 @@
 // Shared helpers for Signature Earth.
-var SE = (function () {
+window.SE = (function () {
   'use strict';
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -64,5 +64,5 @@ var SE = (function () {
     if (o.t) bits.push('Timezone ' + o.t);
     return bits.join('. ') + '.';
   }
-  window.SE = { esc: esc, fetchGz: fetchGz, copyText: copyText, download: download, fmtPop: fmtPop, fmtCoords: fmtCoords, placeText: placeText };
+  return { esc: esc, fetchGz: fetchGz, copyText: copyText, download: download, fmtPop: fmtPop, fmtCoords: fmtCoords, placeText: placeText };
 })();

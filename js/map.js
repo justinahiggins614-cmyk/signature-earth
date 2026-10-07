@@ -344,7 +344,8 @@ document.getElementById('btnLayers').onclick = function () {
 document.getElementById('lyBorders').onchange = function () { setBorders(this.checked); };
 document.getElementById('lyLabels').onchange = function () { setLabels(this.checked); };
 document.getElementById('lyHill').onchange = function () { setHillshade(this.checked); };
-document.getElementById('btnAi').onclick = function () {
+var btnAiMap = document.getElementById('btnAi');
+if (btnAiMap) btnAiMap.onclick = function () {
   if (window.EarthAI) window.EarthAI.toggle();
 };
 
