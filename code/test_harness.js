@@ -147,7 +147,7 @@ if (typeof global.DecompressionStream === 'undefined') {
     }
   };
 }
-global.speechSynthesis = { cancel() {}, speak(u) { global.__spoken = (global.__spoken || []).concat(u.text || ''); }, getVoices: () => [] };
+global.speechSynthesis = { cancel() {}, speak(u) { global.__spoken = (global.__spoken || []).concat(u.text || ''); try { if (u.onend) u.onend(); } catch (e) {} }, getVoices: () => [{ lang: 'en-US', name: 'Google US English' }] };
 global.SpeechSynthesisUtterance = class { constructor(t) { this.text = t; } };
 let rafCb = null;
 global.requestAnimationFrame = (cb) => { rafCb = cb; };
